@@ -1,3 +1,6 @@
 ^special\.epd\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^data-raw$
+^\.R\.ignore$
+^inst$
