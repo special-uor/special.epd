@@ -5,7 +5,7 @@
 \alias{IBERIA_pollen}
 \title{\code{IBERIA_pollen}}
 \format{
-An object of class \code{spec_tbl_df} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 8779 rows and 220 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 8779 rows and 222 columns.
 }
 \usage{
 IBERIA_pollen

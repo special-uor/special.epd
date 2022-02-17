@@ -5,7 +5,7 @@
 \alias{IBERIA_pollen_dates}
 \title{\code{IBERIA_pollen_dates}}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 950 rows and 13 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 950 rows and 15 columns.
 }
 \usage{
 IBERIA_pollen_dates
