@@ -126,6 +126,58 @@ extract_iberia <- function(entity_name = NULL) {
        age_model = age_model_tb)
 }
 
+extract_rpd <- function(ID_ENTITY = NULL) {
+  if (missing(ID_ENTITY))
+    return(NULL)
+  entity_tb <- rpdata::entity %>%
+    dplyr::filter(ID_ENTITY %in% !!ID_ENTITY) %>%
+    dplyr::select(-core_location, -measurement_method, -last_updated) %>%
+    dplyr::rename(entity_type = TYPE) %>%
+    dplyr::left_join(rpdata::entity_link_publication) %>%
+    dplyr::left_join(rpdata::publication) %>%
+    dplyr::group_by(ID_ENTITY) %>%
+    dplyr::mutate(publication = citation %>%
+                    stringr::str_c(collapse = ";\n")) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-ID_PUB, -citation, -pub_DOI_URL, -bibentry, -ID_UNIT) %>%
+    dplyr::distinct()
+  if (nrow(entity_tb) == 0)
+    return(NULL)
+  site_tb <- rpdata::site %>%
+    dplyr::filter(ID_SITE %in% entity_tb$ID_SITE) %>%
+    dplyr::select(ID_SITE, site_name, site_type) # %>%
+    # dplyr::select(-water_depth, -basin_size_class, -catch_size_class, -flow_type, -basin_size_km2, -catch_size_km2)
+  metadata_tb <- site_tb %>%
+    dplyr::right_join(entity_tb)
+  date_info_tb <- rpdata::date_info %>%
+    dplyr::filter(ID_ENTITY %in% entity_tb$ID_ENTITY) %>%
+    dplyr::rename(depth = avg_depth,
+                  age_c14 = age_C14) %>%
+    dplyr::select(-correlation_info)
+  sample_tb <- rpdata::sample %>%
+    dplyr::filter(ID_ENTITY %in% entity_tb$ID_ENTITY) %>%
+    dplyr::rename(depth =  avg_depth,
+                  thickness = sample_thickness) %>%
+    dplyr::select(-analytical_sample_size, -analytical_sample_size_unit) %>%
+    dplyr::mutate(depth = depth * 100) %>%
+    dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+    dplyr::left_join(rpdata::chronology) %>%
+    dplyr::left_join(rpdata::model_name) %>%
+    dplyr::rename(age = original_est_age) %>%
+    dplyr::select(-ID_MODEL)
+  age_model_tb <- rpdata::age_model %>%
+    dplyr::filter(ID_SAMPLE %in% sample_tb$ID_SAMPLE) %>%
+    dplyr::left_join(rpdata::model_name) %>%
+    dplyr::select(-ID_MODEL) %>%
+    dplyr::relocate(model_name, .before = 1)
+  sample_age_model_tb <- sample_tb %>%
+    dplyr::right_join(age_model_tb, by = "ID_SAMPLE")
+  list(metadata = metadata_tb,
+       date_info = date_info_tb,
+       sample = sample_tb,
+       age_model = sample_age_model_tb)
+}
+
 get_id_date_info <- function(conn) {
   suppressWarnings({
     ID_DATE_INFO <- dabr::select_all(conn, "date_info", quiet = TRUE) %>%
@@ -180,9 +232,97 @@ rpd_repatriation <- epd_repatriation_tmp_file %>%
                   to_bool(dates_to_be_extracted_from_rpd),
                 age_model_to_be_extracted_from_rpd =
                   to_bool(age_model_to_be_extracted_from_rpd),
-                matched_lab_no = to_bool(matched_lab_no)
-                )
+                matched_lab_no = to_bool(matched_lab_no)) %>%
+  dplyr::rename(entity_name = entity_name_5,
+                RPD_entity_name = entity_name_10,
+                RPD_ID_ENTITY = rpd_id_entity)
 rpd_repatriation
+
+### RPD dates (12) ----
+rpd_repatriation_dates <- rpd_repatriation %>%
+  dplyr::filter(dates_to_be_extracted_from_rpd)
+
+rpd_repatriated_dates_info <-
+  rpd_repatriation_dates$RPD_ID_ENTITY %>%
+  extract_rpd()
+rpd_repatriated_dates_info_2 <- rpd_repatriation_dates %>%
+  dplyr::select(neotoma_ID_SITE = site_id,
+                neotoma_site_name = site_name,
+                neotoma_entity_name = entity_name,
+                ID_ENTITY = RPD_ID_ENTITY) %>%
+  dplyr::inner_join(rpd_repatriated_dates_info$metadata,
+                    by = "ID_ENTITY") %>%
+  dplyr::rename(external_ID_ENTITY = ID_ENTITY,
+                external_ID_SITE =  ID_SITE,
+                external_site_name = site_name,
+                external_entity_name = entity_name)
+rpd_repatriated_dates_info_3 <- EPD_METADATA %>%
+  dplyr::select(1:4, 6, 10) %>%
+  dplyr::right_join(rpd_repatriated_dates_info_2 %>%
+                      dplyr::select(1:6, 8),
+                    by = c("entity_name" = "neotoma_entity_name"))
+
+#### External links ----
+meta_neo_res <- seq_len(nrow(rpd_repatriated_dates_info_3)) %>%
+  purrr::map(function(i) {
+    rpd_repatriated_dates_info_3[i, ] %>%
+      dplyr::select(ID_SITE,
+                    ID_ENTITY,
+                    external_ID_SITE,
+                    external_ID_ENTITY,
+                    external_site_name,
+                    external_entity_name) %>%
+      dplyr::mutate(external_source = "RPD") %>%
+      rpd:::add_records(conn = conn, table = "external_link", dry_run = TRUE)
+  })
+meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+##### Validate -----
+EPD_METADATA_NEO_DB <- dabr::select_all(conn, "external_link") %>%
+  dplyr::filter(external_ID_ENTITY %in%
+                  rpd_repatriated_dates_info_3$external_ID_ENTITY,
+                external_source == "RPD") %>%
+  dplyr::select(ID_SITE,
+                ID_ENTITY,
+                external_ID_SITE,
+                external_ID_ENTITY,
+                external_site_name,
+                external_entity_name)
+waldo::compare(rpd_repatriated_dates_info_3 %>%
+                 dplyr::select(ID_SITE,
+                               ID_ENTITY,
+                               external_ID_SITE,
+                               external_ID_ENTITY,
+                               external_site_name,
+                               external_entity_name) %>%
+                 dplyr::mutate(external_ID_SITE = as.integer(external_ID_SITE),
+                               external_ID_ENTITY = as.integer(external_ID_ENTITY)),
+               EPD_METADATA_NEO_DB)
+
+#### Dates ----
+rpd_repatriated_dates_info_4 <-
+  rpd_repatriated_dates_info$date_info %>%
+  dplyr::select(-ID_DATE_INFO) %>%
+  dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+  # dplyr::mutate(age_used = ifelse(is.na(reason_age_not_used), "yes", "no")) %>%
+  dplyr::left_join(rpd_repatriated_dates_info_3 %>%
+                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+  dplyr::select(-external_ID_ENTITY) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(lab_num = lab_number)
+meta_neo_res <- seq_len(nrow(rpd_repatriated_dates_info_4))[-1] %>%
+  purrr::map(function(i) {
+    rpd_repatriated_dates_info_4[i, ] %>%
+      rpd:::add_records(conn = conn, table = "date_info", dry_run = F)
+  })
+meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+##### Validate -----
+EPD_DATES_NEO_DB <- dabr::select_all(conn, "date_info") %>%
+  dplyr::filter(ID_ENTITY %in% rpd_repatriated_dates_info_4$ID_ENTITY)
+waldo::compare(rpd_repatriated_dates_info_4 %>%
+                 .[order(colnames(.))],
+               EPD_DATES_NEO_DB %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-ID_DATE_INFO))
 
 
 ## EMBSeCBIO ----
