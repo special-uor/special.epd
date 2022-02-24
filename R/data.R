@@ -1,3 +1,6 @@
+#' @keywords internal
+"_PACKAGE"
+
 #' \code{EPD_COUNTS}
 "EPD_COUNTS"
 
