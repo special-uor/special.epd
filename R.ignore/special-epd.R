@@ -35,9 +35,10 @@ EPD_METADATA <-
 # Subset ----
 ## Extract only a subset of the EPD sites, 60-70 deg N and 0-10 deg E
 epd_subset <- EPD_METADATA %>%
-  # dplyr::filter(entity_name %in% c("SWIENSKU"))
+  # dplyr::filter(entity_name %in% c("VERNAY"))
   dplyr::filter(dplyr::between(latitude, 60, 70),
                 dplyr::between(longitude, 0, 10))
+
 ## Extract the counts and dates linked to the subset area
 epd_subset_counts <- EPD_COUNTS %>%
   dplyr::filter(entity_name %in% epd_subset$entity_name) %>%
