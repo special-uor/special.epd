@@ -35,7 +35,7 @@ EPD_METADATA <-
 # Subset ----
 ## Extract only a subset of the EPD sites, 60-70 deg N and 0-10 deg E
 epd_subset <- EPD_METADATA %>%
-  # dplyr::filter(entity_name %in% c("VERNAY"))
+  # dplyr::filter(entity_name %in% c("DUNEJOLD"))
   dplyr::filter(dplyr::between(latitude, 60, 70),
                 dplyr::between(longitude, 0, 10))
 
@@ -64,7 +64,7 @@ if (nrow(epd_subset_dates_coretops) > 0) {
     dplyr::bind_rows(epd_subset_dates_coretops)
 }
 epd_subset_dates_clean <- epd_subset_dates %>%
-  dplyr::arrange(entity_name, depth_cm) %>%
+  dplyr::arrange(entity_name, depth) %>%
   dplyr::filter(date_type %>% stringr::str_detect("hiatus|Hiatus", TRUE)) %>%
   dplyr::left_join(epd_subset %>% # Append lat and description from the metadata
                      dplyr::select(entity_name, latitude, description),
@@ -85,7 +85,6 @@ epd_subset_dates_clean <- epd_subset_dates %>%
                                         latitude > -15 ~ 4,
                                       TRUE ~ cc)
                 ) %>%
-  dplyr::rename(depth = depth_cm) %>%
   dplyr::filter(!is.na(age)) %>%
   dplyr::select(site_id, site_name, entity_name, lab_num, age, error, depth, cc)
 
@@ -106,7 +105,7 @@ clean_entities <- entities %>%
       dplyr::mutate(id = seq_along(depth), .before = 1)
     hiatus <- epd_subset_dates_hiatus %>%
       dplyr::filter(entity_name == ent) %>%
-      dplyr::select(depth = depth_cm)
+      dplyr::select(depth)
     clean_ent_name <- ageR:::cln_str(ent)
     ageR::create_input(data =
                          list(sample_depths = sample_depths,
@@ -139,10 +138,14 @@ output <- entities2 %>%
                    ccdir = ccdir,
                    max_scenarios = MAX_SCENARIOS,
                    cpus = CPUS,
-                   dry_run = FALSE) %>%
+                   dry_run = F,
+                   thick = 1,
+                   acc = c(25, 30, 35, 40, 45)) %>%
         ageR::pb()
     }, error = function(e) {
       message("ERROR while running `", original, "`: ", e)
       return(NULL)
     })
   })
+
+
