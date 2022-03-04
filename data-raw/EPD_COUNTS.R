@@ -96,3 +96,30 @@ EPD_COUNTS_5$`Calluna vulgaris|clump|pollen|NISP|TRSH` %>% sum(na.rm = TRUE)
 EPD_COUNTS_5$`Calluna vulgaris|NA|pollen|NISP|TRSH` %>% sum(na.rm = TRUE)
 EPD_COUNTS <- EPD_COUNTS_5
 usethis::use_data(EPD_COUNTS, overwrite = TRUE, compress = "xz")
+
+# Unique counts
+unique_counts <-
+  readr::read_csv("inst/extdata/epd_taxa_list.csv")
+
+# Extra counts ----
+extra_counts <-
+  readr::read_csv("inst/extdata/epd_missing_records_counts_2022-02-24.csv")
+
+extra_counts_v2 <- smpds::rm_na_taxa(extra_counts, cols = 1:16)
+
+aux <- unique_counts %>%
+  dplyr::filter((epd_taxa %in% colnames(extra_counts_v2)[-c(1:16)]))
+
+idx <- !(colnames(extra_counts_v2)[-c(1:16)] %in% aux$epd_taxa)
+
+tibble::tibble(epd_taxa = colnames(extra_counts_v2)[-c(1:16)][idx],
+               clean_name = epd_taxa,
+               action = NA) %>%
+  dplyr::arrange(epd_taxa) %>%
+  readr::write_excel_csv(file = "inst/extdata/epd_taxa_list_additional_records.csv", na = "")
+
+readr::read_csv("inst/extdata/epd_taxa_list.csv") %>%
+  dplyr::bind_rows(readr::read_csv("inst/extdata/epd_taxa_list_additional_records.csv")) %>%
+  dplyr::arrange(epd_taxa) %>%
+  readr::write_excel_csv(file = "inst/extdata/epd_taxa_list_2022-02-26.csv", na = "")
+
