@@ -353,6 +353,11 @@ dabr::update(conn,
              "ID_ENTITY = 780 AND",
              "ID_DATE_INFO IN (34)")
 # Results: 1 record was updated.
+dabr::update(conn,
+             "UPDATE date_info SET date_type = 'Top of core known' WHERE",
+             "ID_ENTITY = 780 AND",
+             "ID_DATE_INFO = 1623") # Originally a 'Pollen correlation'
+# Results: 1 record was updated.
 
 # Delete duplicated dates
 dabr::select(conn,
@@ -604,7 +609,7 @@ meta_neo_res <- seq_len(nrow(embsecbio_repatriated_dates_info_4)) %>%
       rpd:::add_records(conn = conn, table = "date_info", dry_run = TRUE)
   })
 meta_neo_res %>% purrr::flatten_lgl() %>% sum()
-inspect(
+
 ##### (TO BE INSPECTED) Validate -----
 EPD_DATES_NEO_DB <- dabr::select_all(conn, "date_info") %>%
   dplyr::filter(ID_ENTITY %in% embsecbio_repatriated_dates_info_4$ID_ENTITY)
@@ -640,74 +645,99 @@ epd_embsecbio_repatriated_dates_info <- EPD_DATES %>%
   dplyr::filter(entity_name %in% epd_embsecbio_repatriation_dates$entity_name)
   # epd_embsecbio_repatriation_dates$EMBSeCBIO_ID_ENTITY %>%
   # extract_embsecbio()
-epd_embsecbio_repatriated_dates_info_2 <- epd_embsecbio_repatriation_dates %>%
-  dplyr::select(neotoma_ID_SITE = site_id,
-                neotoma_site_name = site_name,
-                neotoma_entity_name = entity_name,
-                ID_ENTITY = EMBSeCBIO_ID_ENTITY) %>%
-  dplyr::inner_join(epd_embsecbio_repatriated_dates_info$metadata,
-                    by = "ID_ENTITY") %>%
-  dplyr::rename(external_ID_ENTITY = ID_ENTITY,
-                external_ID_SITE =  ID_SITE,
-                external_site_name = site_name,
-                external_entity_name = entity_name)
-epd_embsecbio_repatriated_dates_info_3 <- EPD_METADATA %>%
-  dplyr::select(1:4, 6, 10) %>%
-  dplyr::right_join(epd_embsecbio_repatriated_dates_info_2 %>%
-                      dplyr::select(1:6, 8),
-                    by = c("entity_name" = "neotoma_entity_name"))
 
-#### External links ----
-meta_neo_res <- seq_len(nrow(epd_embsecbio_repatriated_dates_info_3)) %>%
-  purrr::map(function(i) {
-    epd_embsecbio_repatriated_dates_info_3[i, ] %>%
-      dplyr::select(ID_SITE,
-                    ID_ENTITY,
-                    external_ID_SITE,
-                    external_ID_ENTITY,
-                    external_site_name,
-                    external_entity_name) %>%
-      dplyr::mutate(external_source = "EMBSECBIO") %>%
-      rpd:::add_records(conn = conn, table = "external_link", dry_run = TRUE)
-  })
-meta_neo_res %>% purrr::flatten_lgl() %>% sum()
-##### Validate -----
-EPD_METADATA_NEO_DB <- dabr::select_all(conn, "external_link") %>%
-  dplyr::filter(external_ID_ENTITY %in%
-                  epd_embsecbio_repatriated_dates_info_3$external_ID_ENTITY,
-                external_source == "EMBSECBIO") %>%
-  dplyr::select(ID_SITE,
-                ID_ENTITY,
-                external_ID_SITE,
-                external_ID_ENTITY,
-                external_site_name,
-                external_entity_name)
-waldo::compare(epd_embsecbio_repatriated_dates_info_3 %>%
-                 dplyr::select(ID_SITE,
-                               ID_ENTITY,
-                               external_ID_SITE,
-                               external_ID_ENTITY,
-                               external_site_name,
-                               external_entity_name) %>%
-                 dplyr::mutate(external_ID_SITE = as.integer(external_ID_SITE),
-                               external_ID_ENTITY = as.integer(external_ID_ENTITY)),
-               EPD_METADATA_NEO_DB)
+epd_embsecbio_external_links <- dabr::select_all(conn, "external_link") %>%
+  dplyr::filter(external_entity_name %in%
+                  epd_embsecbio_repatriated_dates_info$entity_name)
+
+epd_embsecbio_repatriated_dates_info_2 <- epd_embsecbio_repatriation_dates %>%
+  dplyr::select(external_ID_SITE = site_id,
+                external_site_name = site_name,
+                external_entity_name = entity_name) %>%
+  dplyr::left_join(epd_embsecbio_external_links,
+                   by = c("external_ID_SITE",
+                          "external_site_name",
+                          "external_entity_name")) %>%
+  dplyr::right_join(epd_embsecbio_repatriated_dates_info,
+                    by = c(
+                      "external_ID_SITE" = "site_id",
+                      "external_site_name" = "site_name",
+                      "external_entity_name" = "entity_name"
+                    ))
+  # dplyr::select(neotoma_ID_SITE = site_id,
+  #               neotoma_site_name = site_name,
+  #               neotoma_entity_name = entity_name) %>%
+                # ID_ENTITY = EMBSeCBIO_ID_ENTITY) %>%
+  # dplyr::inner_join(epd_embsecbio_repatriated_dates_info$metadata,
+  #                   by = "ID_ENTITY") %>%
+  # dplyr::rename(external_ID_ENTITY = ID_ENTITY,
+  #               external_ID_SITE =  ID_SITE,
+  #               external_site_name = site_name,
+  #               external_entity_name = entity_name)
+# epd_embsecbio_repatriated_dates_info_3 <- EPD_METADATA %>%
+#   dplyr::select(1:4, 6, 10) %>%
+#   dplyr::right_join(epd_embsecbio_repatriated_dates_info_2 %>%
+#                       dplyr::select(1:6, 8),
+#                     by = c("entity_name" = "neotoma_entity_name"))
+
+epd_embsecbio_repatriated_dates_info_3 <- epd_embsecbio_repatriated_dates_info_2 #%>%
+  # dplyr::select(-dplyr::starts_with("external_"), -ages_already)
+# #### External links ----
+# meta_neo_res <- seq_len(nrow(epd_embsecbio_repatriated_dates_info_3)) %>%
+#   purrr::map(function(i) {
+#     epd_embsecbio_repatriated_dates_info_3[i, ] %>%
+#       dplyr::select(ID_SITE,
+#                     ID_ENTITY,
+#                     external_ID_SITE,
+#                     external_ID_ENTITY,
+#                     external_site_name,
+#                     external_entity_name) %>%
+#       dplyr::mutate(external_source = "EMBSECBIO") %>%
+#       rpd:::add_records(conn = conn, table = "external_link", dry_run = TRUE)
+#   })
+# meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+# ##### Validate -----
+# EPD_METADATA_NEO_DB <- dabr::select_all(conn, "external_link") %>%
+#   dplyr::filter(external_ID_ENTITY %in%
+#                   epd_embsecbio_repatriated_dates_info_3$external_ID_ENTITY,
+#                 external_source == "EMBSECBIO") %>%
+#   dplyr::select(ID_SITE,
+#                 ID_ENTITY,
+#                 external_ID_SITE,
+#                 external_ID_ENTITY,
+#                 external_site_name,
+#                 external_entity_name)
+# waldo::compare(epd_embsecbio_repatriated_dates_info_3 %>%
+#                  dplyr::select(ID_SITE,
+#                                ID_ENTITY,
+#                                external_ID_SITE,
+#                                external_ID_ENTITY,
+#                                external_site_name,
+#                                external_entity_name) %>%
+#                  dplyr::mutate(external_ID_SITE = as.integer(external_ID_SITE),
+#                                external_ID_ENTITY = as.integer(external_ID_ENTITY)),
+#                EPD_METADATA_NEO_DB)
 
 #### Dates ----
 epd_embsecbio_repatriated_dates_info_4 <-
-  epd_embsecbio_repatriated_dates_info$date_info %>%
-  dplyr::select(-ID_DATE_INFO) %>%
-  dplyr::rename(external_ID_ENTITY = ID_ENTITY,
-                reason_age_not_used = date_comments) %>%
-  dplyr::mutate(age_used = ifelse(is.na(reason_age_not_used), "yes", "no")) %>%
-  dplyr::left_join(epd_embsecbio_repatriated_dates_info_3 %>%
-                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
-  dplyr::select(-external_ID_ENTITY) %>%
-  dplyr::relocate(ID_ENTITY, .before = 1)
+  epd_embsecbio_repatriated_dates_info_3 %>%
+  dplyr::select(-c(1:3, 6:7)) %>%
+  dplyr::arrange(ID_ENTITY, depth) %>%
+  dplyr::select(-ID_SITE, -ages_already, -site_name_clean) %>%
+  dplyr::rename(age_calib = age_cal)
+  # epd_embsecbio_repatriated_dates_info$date_info %>%
+  # dplyr::select(-ID_DATE_INFO) %>%
+  # dplyr::rename(external_ID_ENTITY = ID_ENTITY,
+  #               reason_age_not_used = date_comments) %>%
+  # dplyr::mutate(age_used = ifelse(is.na(reason_age_not_used), "yes", "no")) %>%
+  # dplyr::left_join(epd_embsecbio_repatriated_dates_info_3 %>%
+  #                    dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+  # dplyr::select(-external_ID_ENTITY) %>%
+  # dplyr::relocate(ID_ENTITY, .before = 1)
 
 epd_embsecbio_repatriated_dates_info_4_EPD <- EPD_DATES %>%
-  dplyr::filter(entity_name %in% epd_embsecbio_repatriated_dates_info_3$entity_name,
-                is.na(ages_already) | ages_already == "EMBSECBIO") %>%
+  dplyr::filter(entity_name %in% epd_embsecbio_repatriated_dates_info_3$external_entity_name) %>% #,
+                # is.na(ages_already) | ages_already == "EMBSECBIO") %>%
   dplyr::left_join(EPD_METADATA %>%
                      dplyr::select(1:6),
                    by = c("site_id", "site_name", "site_name_clean", "entity_name")) %>%
@@ -715,7 +745,8 @@ epd_embsecbio_repatriated_dates_info_4_EPD <- EPD_DATES %>%
   dplyr::arrange(ID_ENTITY, depth) %>%
   dplyr::select(-ID_SITE, -ages_already, -site_id, -site_name, -site_name_clean, -entity_name) %>%
   dplyr::rename(age_calib = age_cal)
-
+#
+# waldo::compare(epd_embsecbio_repatriated_dates_info_4, epd_embsecbio_repatriated_dates_info_4_EPD)
 dplyr::bind_rows(epd_embsecbio_repatriated_dates_info_4,
                  epd_embsecbio_repatriated_dates_info_4_EPD) %>%
   dplyr::mutate(lab_num = stringr::str_squish(lab_num) %>%
