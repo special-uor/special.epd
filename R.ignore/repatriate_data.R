@@ -8,12 +8,26 @@ googledrive::as_id(epd_repatriation_id) %>%
 # Open DB connection ----
 conn <- dabr::open_conn_mysql("SPECIAL-EPD",
                               password = rstudioapi::askForPassword())
+conn_rpd <- dabr::open_conn_mysql("RPD-latest",
+                                  password = rstudioapi::askForPassword())
 
 # Load datasets ----
 data("EPD_COUNTS")
 data("EPD_DATES")
 data("EPD_DATES_coretops")
 data("EPD_METADATA")
+
+a <- dplyr::bind_rows(
+  EPD_DATES,
+  EPD_DATES_coretops
+)
+
+a %>%
+  dplyr::filter(!is.na(depth)) %>%
+  dplyr::arrange(entity_name, depth) %>%
+  dplyr::group_by(entity_name) %>%
+  dplyr::summarise(n = dplyr::n()) %>%
+  dplyr::filter(n < 2)
 
 # Helper functions ----
 to_bool <- function(x) {
@@ -161,13 +175,17 @@ extract_rpd <- function(ID_ENTITY = NULL) {
     dplyr::select(-analytical_sample_size, -analytical_sample_size_unit) %>%
     dplyr::mutate(depth = depth * 100) %>%
     dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
-    dplyr::left_join(rpdata::chronology) %>%
-    dplyr::left_join(rpdata::model_name) %>%
-    dplyr::rename(age = original_est_age) %>%
+    dplyr::left_join(rpdata::chronology,
+                     by = "ID_SAMPLE") %>%
+    dplyr::left_join(rpdata::model_name,
+                     by = "ID_MODEL") %>%
+    dplyr::rename(age = original_est_age,
+                  model_name_original = model_name) %>%
     dplyr::select(-ID_MODEL)
   age_model_tb <- rpdata::age_model %>%
     dplyr::filter(ID_SAMPLE %in% sample_tb$ID_SAMPLE) %>%
-    dplyr::left_join(rpdata::model_name) %>%
+    dplyr::left_join(rpdata::model_name,
+                     by = "ID_MODEL") %>%
     dplyr::select(-ID_MODEL) %>%
     dplyr::relocate(model_name, .before = 1)
   sample_age_model_tb <- sample_tb %>%
@@ -238,7 +256,7 @@ rpd_repatriation <- epd_repatriation_tmp_file %>%
                 RPD_ID_ENTITY = rpd_id_entity)
 rpd_repatriation
 
-### RPD dates (12) ----
+### RPD dates (113) ----
 rpd_repatriation_dates <- rpd_repatriation %>%
   dplyr::filter(dates_to_be_extracted_from_rpd)
 
@@ -263,9 +281,14 @@ rpd_repatriated_dates_info_3 <- EPD_METADATA %>%
                     by = c("entity_name" = "neotoma_entity_name"))
 
 #### External links ----
-meta_neo_res <- seq_len(nrow(rpd_repatriated_dates_info_3)) %>%
+meta_neo_res <- rpd_repatriated_dates_info_3 %>%
+  dplyr::filter(external_entity_name %>% stringr::str_detect("Solso")) %>%
+  nrow() %>%
+  seq_len() %>%
   purrr::map(function(i) {
-    rpd_repatriated_dates_info_3[i, ] %>%
+    rpd_repatriated_dates_info_3 %>%
+      dplyr::filter(external_entity_name %>% stringr::str_detect("Solso")) %>%
+      dplyr::slice(i) %>%
       dplyr::select(ID_SITE,
                     ID_ENTITY,
                     external_ID_SITE,
@@ -308,8 +331,11 @@ rpd_repatriated_dates_info_4 <-
                      dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
   dplyr::select(-external_ID_ENTITY) %>%
   dplyr::relocate(ID_ENTITY, .before = 1) %>%
-  dplyr::rename(lab_num = lab_number)
-meta_neo_res <- seq_len(nrow(rpd_repatriated_dates_info_4))[-1] %>%
+  dplyr::rename(lab_num = lab_number) #%>%
+  #dplyr::filter(ID_ENTITY %in% c(838)) # New records
+
+special.epd::dump_all(conn, ID_ENTITY = 838)
+meta_neo_res <- seq_len(nrow(rpd_repatriated_dates_info_4)) %>%
   purrr::map(function(i) {
     rpd_repatriated_dates_info_4[i, ] %>%
       rpd:::add_records(conn = conn, table = "date_info", dry_run = TRUE)
@@ -319,16 +345,19 @@ meta_neo_res %>% purrr::flatten_lgl() %>% sum()
 EPD_DATES_NEO_DB <- dabr::select_all(conn, "date_info") %>%
   dplyr::filter(ID_ENTITY %in% rpd_repatriated_dates_info_4$ID_ENTITY)
 waldo::compare(rpd_repatriated_dates_info_4 %>%
-                 .[order(colnames(.))],
+                 .[order(colnames(.))] %>%
+                 dplyr::arrange(ID_ENTITY, depth),
                EPD_DATES_NEO_DB %>%
                  .[order(colnames(.))] %>%
-                 dplyr::select(-ID_DATE_INFO))
+                 dplyr::select(-ID_DATE_INFO) %>%
+                 dplyr::arrange(ID_ENTITY, depth),
+               max_diffs = Inf)
 
 #### DURANK3 ----
 "The entity called 'DURANK3' was identified in both the EMBSeCBIO and RPD."
 "The age models will be inspected to determine which version to keep."
-a <- get_entity(conn, 780)
-
+a <- special.epd::get_entity(conn, 780)
+special.epd::dump_all(conn, ID_ENTITY = 780)
 dabr::select(conn,
              "SELECT * FROM external_link WHERE",
              "external_ID_SITE = 620 AND",
@@ -370,32 +399,62 @@ dabr::delete(conn,
              "ID_DATE_INFO IN (1621, 1622, 1624, 1625, 1626)")
 # Results: 5 records were deleted.
 
-### non-RPD dates (14) ----
+### non-RPD dates (7) ----
 non_rpd_repatriation_dates <- rpd_repatriation %>%
   dplyr::filter(!dates_to_be_extracted_from_rpd) %>%
   dplyr::filter(entity_name != "DURANK3")
 
-rpd_repatriated_dates_info <-
+non_rpd_repatriated_dates_info <-
   non_rpd_repatriation_dates$RPD_ID_ENTITY %>%
   extract_rpd()
-rpd_repatriated_dates_info_2 <- non_rpd_repatriation_dates %>%
+non_rpd_repatriated_dates_info_2 <- non_rpd_repatriation_dates %>%
   dplyr::select(neotoma_ID_SITE = site_id,
                 neotoma_site_name = site_name,
                 neotoma_entity_name = entity_name,
                 ID_ENTITY = RPD_ID_ENTITY) %>%
-  dplyr::inner_join(rpd_repatriated_dates_info$metadata,
+  dplyr::inner_join(non_rpd_repatriated_dates_info$metadata,
                     by = "ID_ENTITY") %>%
   dplyr::rename(external_ID_ENTITY = ID_ENTITY,
                 external_ID_SITE =  ID_SITE,
                 external_site_name = site_name,
                 external_entity_name = entity_name)
-rpd_repatriated_dates_info_3 <- EPD_METADATA %>%
+non_rpd_repatriated_dates_info_3 <- EPD_METADATA %>%
   dplyr::select(1:4, 6, 10) %>%
-  dplyr::right_join(rpd_repatriated_dates_info_2 %>%
+  dplyr::right_join(non_rpd_repatriated_dates_info_2 %>%
                       dplyr::select(1:6, 8),
                     by = c("entity_name" = "neotoma_entity_name"))
 
-### (HERE) RPD age models (47) ----
+#### Dates ----
+non_rpd_repatriated_dates_info_4 <- EPD_DATES %>%
+  dplyr::filter(entity_name %in% non_rpd_repatriated_dates_info_3$entity_name) %>%
+  # dplyr::rename(external_ID_SITE = site_id) %>%
+  dplyr::left_join(non_rpd_repatriated_dates_info_3 %>%
+                     dplyr::select(ID_ENTITY, site_id, entity_name)) %>%
+  dplyr::select(-ages_already, -site_id, -site_name, -site_name_clean, -entity_name) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(age_calib = age_cal)
+
+# Check for existing dates
+special.epd::dump_all(conn, ID_ENTITY = non_rpd_repatriated_dates_info_4$ID_ENTITY)
+meta_neo_res <- seq_len(nrow(non_rpd_repatriated_dates_info_4)) %>%
+  purrr::map(function(i) {
+    non_rpd_repatriated_dates_info_4[i, ] %>%
+      rpd:::add_records(conn = conn, table = "date_info", dry_run = TRUE)
+  })
+meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+##### Validate -----
+EPD_DATES_NEO_DB <- dabr::select_all(conn, "date_info") %>%
+  dplyr::filter(ID_ENTITY %in% non_rpd_repatriated_dates_info_4$ID_ENTITY)
+waldo::compare(non_rpd_repatriated_dates_info_4 %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::arrange(ID_ENTITY, depth),
+               EPD_DATES_NEO_DB %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-ID_DATE_INFO) %>%
+                 dplyr::arrange(ID_ENTITY, depth),
+               max_diffs = Inf)
+
+### RPD age models (47) ----
 rpd_repatriation_am <- rpd_repatriation %>%
   dplyr::filter(age_model_to_be_extracted_from_rpd)
 
@@ -431,80 +490,134 @@ rpd_repatriated_am_info_EPD_COUNTS <- EPD_COUNTS %>%
                    by = c("site_id", "site_name", "site_name_clean", "dataset_id", "entity_name")) %>%
   dplyr::relocate(ID_SITE, ID_ENTITY, .before = 1)
 
-rpd_repatriated_am_info_4 <- rpd_repatriated_am_info$age_model %>%
-  dplyr::mutate(age = dplyr::coalesce(age, est_age_original),
-                age_original = est_age_original) %>%
-  dplyr::select(-est_age_original, -comment) %>%
+rpd_repatriated_am_info_4 <- rpd_repatriated_am_info$sample %>%
+  dplyr::left_join(rpd_repatriated_am_info$age_model) %>%
+  # dplyr::mutate(age = dplyr::coalesce(age, est_age_original),
+  #               age_original = est_age_original) %>%
+  # dplyr::select(-est_age_original, -comment) %>%
   dplyr::left_join(rpd_repatriated_am_info_3 %>%
-                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+                     dplyr::select(ID_ENTITY, external_ID_ENTITY),
+                   by = "external_ID_ENTITY") %>%
   # dplyr::filter(ID_ENTITY != 18) %>%
   dplyr::select(-ID_SAMPLE, -external_ID_ENTITY) %>%
   dplyr::relocate(ID_ENTITY, .before = 1)
 
-# Extract thickness from the EPD data
-rpd_repatriated_am_info_5 <- rpd_repatriated_am_info_4 %>%
-  dplyr::mutate(depth2 = round(depth, 3)) %>%
-  dplyr::left_join(rpd_repatriated_am_info_EPD_COUNTS %>%
-                     dplyr::select(ID_ENTITY, depth, thickness, chronology_name,
-                                   age_EPD = age, age_younger, age_older, age_type) %>%
-                     dplyr::mutate(depth = round(depth, 3)),
-                   by = c("ID_ENTITY",  "depth2" = "depth")) %>%
-  dplyr::select(-depth2) %>%
-  dplyr::relocate(thickness,
-                  # age_original,
-                  age_EPD,
-                  chronology_name,
-                  age_younger,
-                  age_older,
-                  age_type,
-                  .before = mean) %>%
-  # dplyr::filter(age != age_EPD)
-  # dplyr::group_by(ID_ENTITY) %>%
-  dplyr::mutate(lower = round(age_EPD) * 0.99,
-                upper = round(age_EPD) * 1.01,
-                same_age = (round(age) >= lower & round(age) <= upper) | (is.na(age) & is.na(age_EPD)),
-                chronology_name = ifelse(same_age, chronology_name, NA),
-                age_younger = ifelse(same_age, age_younger, NA),
-                age_older = ifelse(same_age, age_older, NA),
-                age_type = ifelse(same_age, age_type, NA)) %>%
-  dplyr::select(-age_original, -age_EPD, -lower, -upper, -same_age) %>%
-  dplyr::mutate(ID_SAMPLE = seq_along(ID_ENTITY), .before = 1)
-# dplyr::mutate(ID_SAMPLE = get_id_sample(conn))
+# # Extract thickness from the EPD data
+# rpd_repatriated_am_info_5 <- rpd_repatriated_am_info_4 %>%
+#   dplyr::mutate(depth2 = round(depth, 3)) %>%
+#   dplyr::left_join(rpd_repatriated_am_info_EPD_COUNTS %>%
+#                      dplyr::select(ID_ENTITY, depth, thickness, chronology_name,
+#                                    age_EPD = age, age_younger, age_older, age_type) %>%
+#                      dplyr::mutate(depth = round(depth, 3)),
+#                    by = c("ID_ENTITY",  "depth2" = "depth")) %>%
+#   dplyr::select(-depth2) %>%
+#   dplyr::relocate(#thickness,
+#                   # age_original,
+#                   age_EPD,
+#                   chronology_name,
+#                   age_younger,
+#                   age_older,
+#                   age_type,
+#                   .before = mean) %>%
+#   # dplyr::filter(age != age_EPD)
+#   # dplyr::group_by(ID_ENTITY) %>%
+#   dplyr::mutate(lower = round(age_EPD) * 0.99,
+#                 upper = round(age_EPD) * 1.01,
+#                 same_age = (round(age) >= lower & round(age) <= upper) | (is.na(age) & is.na(age_EPD)),
+#                 chronology_name = ifelse(same_age, chronology_name, NA),
+#                 age_younger = ifelse(same_age, age_younger, NA),
+#                 age_older = ifelse(same_age, age_older, NA),
+#                 age_type = ifelse(same_age, age_type, NA)) %>%
+#   dplyr::select(-age_original, -age_EPD, -lower, -upper, -same_age) %>%
+#   dplyr::mutate(ID_SAMPLE = seq_along(ID_ENTITY), .before = 1)
+# # dplyr::mutate(ID_SAMPLE = get_id_sample(conn))
+#
+# # Verify if the EPD has more samples than the RPD
+# tibble::tibble(
+#   ID_ENTITY = names(table(rpd_repatriated_am_info_EPD_COUNTS$ID_ENTITY)),
+#   EPD = table(rpd_repatriated_am_info_EPD_COUNTS$ID_ENTITY),
+#   EMB = table(rpd_repatriated_am_info_4$ID_ENTITY)
+# ) %>%
+#   dplyr::filter(EPD > EMB)
 
-# Verify if the EPD has more samples than the RPD
-tibble::tibble(
-  ID_ENTITY = names(table(rpd_repatriated_am_info_EPD_COUNTS$ID_ENTITY)),
-  EPD = table(rpd_repatriated_am_info_EPD_COUNTS$ID_ENTITY),
-  EMB = table(rpd_repatriated_am_info_4$ID_ENTITY)
-) %>%
-  dplyr::filter(EPD > EMB)
+rpd_repatriated_am_info_3 %>%
+  dplyr::filter(!(ID_ENTITY %in% rpd_repatriated_am_info_4$ID_ENTITY))
 
-meta_neo_res <- seq_len(nrow(rpd_repatriated_am_info_5)) %>%
+external_links <- dabr::select_all(conn, "external_link") %>%
+  dplyr::filter(ID_ENTITY %in% rpd_repatriated_am_info_3$ID_ENTITY)
+
+aux <- conn %>%
+  special.epd::dump_all(ID_ENTITY = rpd_repatriated_am_info_4$ID_ENTITY)
+rpd_repatriated_am_info_3 %>%
+  dplyr::filter(!(ID_ENTITY %in% aux$date_info$ID_ENTITY))
+
+meta_neo_res <- seq_len(nrow(rpd_repatriated_am_info_4)) %>%
   purrr::map(function(i) {
-    rpd_repatriated_am_info_5[i, ] %>%
-      dplyr::select(1:11) %>%
+    rpd_repatriated_am_info_4[i, ] %>%
+      dplyr::mutate(chronology_name =
+                      stringr::str_c("Original age model: ",
+                                     model_name_original)) %>%
+      dplyr::select(ID_ENTITY, depth, thickness, chronology_name, age) %>%
       rpd:::add_records(conn = conn, table = "sample", dry_run = FALSE)
   })
 meta_neo_res %>% purrr::flatten_lgl() %>% sum()
 ##### Validate -----
 EPD_DATES_NEO_DB <- dabr::select_all(conn, "sample") %>%
-  dplyr::filter(ID_ENTITY %in% rpd_repatriated_am_info_5$ID_ENTITY)
-waldo::compare(rpd_repatriated_am_info_5 %>%
-                 dplyr::select(1:11) %>%
+  dplyr::filter(ID_ENTITY %in% rpd_repatriated_am_info_4$ID_ENTITY)
+waldo::compare(rpd_repatriated_am_info_4 %>%
+                 dplyr::mutate(chronology_name =
+                                 stringr::str_c("Original age model: ",
+                                                model_name_original)) %>%
+                 dplyr::select(ID_ENTITY, depth, thickness, chronology_name, age) %>%
                  .[order(colnames(.))] %>%
                  dplyr::mutate(depth = round(depth, 3),
                                age = round(age)),
                EPD_DATES_NEO_DB %>%
                  .[order(colnames(.))] %>%
                  dplyr::mutate(depth = round(depth, 3),
-                               age = round(age)), tolerance = 2)
+                               age = round(age)) %>%
+                 dplyr::select(-age_older, -age_type, -age_younger,
+                               -ID_SAMPLE, -sample_type, -count_type),
+               tolerance = 2)
 
-#### Age models ----
+#### (HERE) Age models ----
+# Extract ID_SAMPLE
+aux <- dabr::select_all(conn, "sample") %>%
+  dplyr::filter(ID_ENTITY %in% rpd_repatriated_am_info_4$ID_ENTITY)
+
+# aux <-
+aux2 <- rpd_repatriated_am_info_5 %>%
+  dplyr::mutate(ID_MODEL = 8, .before = 2) %>% # Bacon IntCal20
+  dplyr::select(ID_MODEL, ID_SAMPLE, mean, median,
+                UNCERT_5, UNCERT_25, UNCERT_75, UNCERT_95) %>%
+  dplyr::filter(is.na(mean), is.na(median))
+rpd_records_wo_am <- dabr::select_all(conn, "entity")  %>%
+  dplyr::filter(ID_ENTITY %in% (dabr::select_all(conn, "sample") %>%
+                  dplyr::filter(ID_SAMPLE %in% aux2$ID_SAMPLE) %>%
+                  .$ID_ENTITY %>% unique())) %>%
+  dplyr::select(1:4) %>%
+  dplyr::left_join(dabr::select_all(conn, "external_link")) %>%
+  dplyr::filter(entity_name %>% stringr::str_detect("EGR2") |
+                  external_source == "RPD")
+rpd_records_wo_am %>%
+  readr::write_excel_csv("~/Downloads/rpd_records_without_age_models.csv")
+
+am <- dabr::select_all(conn_rpd, "age_model") %>%
+  dplyr::left_join(dabr::select_all(conn_rpd, "sample") %>%
+                     dplyr::select(ID_SAMPLE, ID_ENTITY)) %>%
+  dplyr::filter(ID_ENTITY %in% rpd_records_wo_am$external_ID_ENTITY)
+
+rpd_repatriated_am_info_5 <- rpd_repatriated_am_info_4 %>%
+  # dplyr::left_join(aux[1:3]) %>%
+  dplyr::bind_cols(aux[2]) %>%
+  dplyr::relocate(ID_SAMPLE, .before = 2)
+waldo::compare(aux[1:4], rpd_repatriated_am_info_5[1:4], tolerance = 0.001)
 meta_neo_res <- seq_len(nrow(rpd_repatriated_am_info_5)) %>%
   purrr::map(function(i) {
     rpd_repatriated_am_info_5[i, ] %>%
-      dplyr::select(1, 12:17) %>%
       dplyr::mutate(ID_MODEL = 8, .before = 2) %>% # Bacon IntCal20
+      dplyr::select(ID_MODEL, ID_SAMPLE, mean, median,
+                    UNCERT_5, UNCERT_25, UNCERT_75, UNCERT_95) %>%
       rpd:::add_records(conn = conn, table = "age_model", dry_run = TRUE)
   })
 meta_neo_res %>% purrr::flatten_lgl() %>% sum()
