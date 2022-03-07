@@ -13,6 +13,12 @@
 #' \code{EPD_METADATA}
 "EPD_METADATA"
 
+#' \code{EPD_taxa_amalgamation}
+"EPD_taxa_amalgamation"
+
+#' \code{EPD_taxa_to_exclude}
+"EPD_taxa_to_exclude"
+
 #' \code{IBERIA_pollen_dates}
 "IBERIA_pollen_dates"
 
