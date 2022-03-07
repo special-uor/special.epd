@@ -5,7 +5,7 @@
 \alias{EPD_COUNTS}
 \title{\code{EPD_COUNTS}}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 99912 rows and 4842 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 100397 rows and 3316 columns.
 }
 \usage{
 EPD_COUNTS
