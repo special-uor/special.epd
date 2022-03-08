@@ -139,7 +139,8 @@ dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
     sample = sample_tb,
     age_model = age_model_tb,
     pollen_count = pollen_count_tb
-  )
+  ) %>%
+    magrittr::set_class(c("special.epd", class(.)))
 }
 
 #' @keywords internal
@@ -150,4 +151,37 @@ dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
                  ")",
                  quiet = quiet)
   return(.dump_all_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
+}
+
+#' Write DB snapshot to disk
+#' Write DB snapshot to disk as individual CSV files.
+#'
+#' @param x DB snapshot (object of `special.epd` class).
+#' @param prefix String with a prefix path where the data should be stored.
+#'
+#' @return Invisibly returns the input DB snapshot.
+#' @export
+write_csvs <- function(x, prefix) {
+  if (!("special.epd" %in% class(x)))
+    stop("The given object does not look like a valid snapshot from the ",
+         "`SPECIAL-EPD database. Try using the function `dump_all` first.",
+         call. = FALSE)
+  if (!dir.exists(dirname(prefix)))
+    stop("The provided directory, `", dirname(prefix), "`, does not exist.",
+         call. = FALSE)
+  x$entity %>%
+    readr::write_excel_csv(file = paste0(prefix, "_metadata.csv"), na = "")
+  x$date_info %>%
+    readr::write_excel_csv(file = paste0(prefix, "_dates.csv"), na = "")
+  x$sample %>%
+    readr::write_excel_csv(file = paste0(prefix, "_samples.csv"), na = "")
+  x$age_model %>%
+    readr::write_excel_csv(file = paste0(prefix, "_age_model.csv"), na = "")
+  x$pollen_count$clean %>%
+    readr::write_excel_csv(file = paste0(prefix, "_pollen_counts_clean.csv"))
+  x$pollen_count$intermediate %>%
+    readr::write_excel_csv(file = paste0(prefix, "_pollen_counts_intermediate.csv"))
+  x$pollen_count$amalgamated %>%
+    readr::write_excel_csv(file = paste0(prefix, "_pollen_counts_amalgamated.csv"))
+  return(invisible(x))
 }
