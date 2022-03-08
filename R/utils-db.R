@@ -53,24 +53,86 @@ dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
                  ")",
                  quiet = quiet)
   if (nrow(sample_tb) > 0) {
-    model_name_tb <- dabr::select_all(conn, "model_name", quiet = TRUE)
-    age_model_tb <- conn %>%
-      dabr::select("SELECT * FROM age_model WHERE ID_SAMPLE IN (",
-                   paste0(sample_tb$ID_SAMPLE, collapse = ", "),
-                   ")",
-                   quiet = quiet) %>%
-      dplyr::left_join(model_name_tb, by = "ID_MODEL")
-    taxon_name_tb <- dabr::select_all(conn, "taxon_name", quiet = TRUE)
-    pollen_count_tb <- conn %>%
-      dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
-                   paste0(sample_tb$ID_SAMPLE, collapse = ", "),
-                   ")",
-                   quiet = quiet) %>%
-      dplyr::left_join(taxon_name_tb, by = "ID_TAXON")
+    tryCatch({
+      model_name_tb <- dabr::select_all(conn, "model_name", quiet = TRUE)
+      age_model_tb <- conn %>%
+        dabr::select("SELECT * FROM age_model WHERE ID_SAMPLE IN (",
+                     paste0(sample_tb$ID_SAMPLE, collapse = ", "),
+                     ")",
+                     quiet = quiet) %>%
+        dplyr::left_join(model_name_tb, by = "ID_MODEL")
+    }, error = function(e) {
+      age_model_tb <- NULL
+    })
+    tryCatch({
+      taxon_name_tb <- dabr::select_all(conn, "taxon_name", quiet = TRUE)
+      pollen_count_tb <- conn %>%
+        dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
+                     paste0(sample_tb$ID_SAMPLE, collapse = ", "),
+                     ")",
+                     quiet = quiet) %>%
+        dplyr::left_join(taxon_name_tb, by = "ID_TAXON") %>%
+        # dplyr::mutate(amalgamation_level = dplyr::case_when(
+        #   amalgamation_level == 0 ~ "clean",
+        #   amalgamation_level == 1 ~ "intermediate",
+        #   amalgamation_level == 2 ~ "amalgamated",
+        #   TRUE ~ NA_character_
+        # )) %>%
+        split(.$amalgamation_level) %>%
+        purrr::map(function(counts) {
+          counts %>%
+            dplyr::select(-ID_TAXON) %>%
+            dplyr::filter(!is.na(count)) %>%
+            tidyr::pivot_wider(id_cols = c(ID_SAMPLE, amalgamation_level),
+                               names_from = taxon_name,
+                               values_from = count) %>%
+            dplyr::select(1, order(colnames(.)[-1]) + 1)
+        }) %>%
+        magrittr::set_names(names(.) %>%
+                              stringr::str_replace_all("0", "clean") %>%
+                              stringr::str_replace_all("1", "intermediate") %>%
+                              stringr::str_replace_all("2", "amalgamated"))
+    }, error = function(e) {
+      pollen_count_tb <- NULL
+    })
   } else {
     age_model_tb <- NULL
     pollen_count_tb <- NULL
   }
+  # a <- entity_tb %>%
+  #   purrr::pmap_df(function(ID_SITE, ID_ENTITY, site_name, entity_name, ...) {
+  #     tibble::tibble(
+  #       ID_SITE,
+  #       ID_ENTITY,
+  #       site_name,
+  #       entity_name,
+  #       metadata = entity_tb %>%
+  #         dplyr::filter(ID_SITE == !!ID_SITE, ID_ENTITY == !!ID_ENTITY) %>%
+  #         dplyr::select(-c(1:4)) %>%
+  #         list(),
+  #       dates = date_info_tb %>%
+  #         dplyr::filter(ID_ENTITY == !!ID_ENTITY) %>%
+  #         dplyr::select(-c(1)) %>%
+  #         list(),
+  #       samples = sample_tb %>%
+  #         dplyr::filter(ID_ENTITY == !!ID_ENTITY) %>%
+  #         dplyr::select(-c(1)) %>%
+  #         list(),
+  #       age_model = age_model_tb %>%
+  #         dplyr::filter(ID_SAMPLE %in% purrr::pluck(samples, "ID_SAMPLE")) %>%
+  #         dplyr::select(-c(1)) %>%
+  #         list(),
+  #       pollen_counts = pollen_count_tb %>%
+  #         tibble::as_tibble() %>%
+  #         purrr::map(~print(purrr::pluck(samples, "ID_SAMPLE")))
+  #         #              .x %>%
+  #         #              dplyr::filter(ID_SAMPLE %in%
+  #         #                              samples$ID_SAMPLE) %>%
+  #         #              dplyr::select(-c(1))) %>%
+  #         # list()
+  #     )
+  #   })
+
   list(
     entity = entity_tb,
     date_info = date_info_tb,
