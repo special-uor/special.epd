@@ -81,9 +81,9 @@ dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
         split(.$amalgamation_level) %>%
         purrr::map(function(counts) {
           counts %>%
-            dplyr::select(-ID_TAXON) %>%
+            dplyr::select(-ID_TAXON, -amalgamation_level) %>%
             dplyr::filter(!is.na(count)) %>%
-            tidyr::pivot_wider(id_cols = c(ID_SAMPLE, amalgamation_level),
+            tidyr::pivot_wider(id_cols = c(ID_SAMPLE),
                                names_from = taxon_name,
                                values_from = count) %>%
             dplyr::select(1, order(colnames(.)[-1]) + 1)
