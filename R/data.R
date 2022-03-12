@@ -24,3 +24,21 @@
 
 #' \code{IBERIA_pollen}
 "IBERIA_pollen"
+
+
+#' \code{age_model}
+"age_model"
+#' \code{date_info}
+"date_info"
+#' \code{entity}
+"entity"
+#' \code{external_link}
+"external_link"
+#' \code{model_name}
+"model_name"
+#' \code{pollen_count}
+"pollen_count"
+#' \code{sample}
+"sample"
+#' \code{taxon_name}
+"taxon_name"
