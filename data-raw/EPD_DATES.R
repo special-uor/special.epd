@@ -20,5 +20,35 @@ EPD_METADATA %>%
   dplyr::select(ID_SITE, ID_ENTITY, site_id, entity_name) %>%
   dplyr::right_join(EPD_DATES,
                     by = c("site_id", "entity_name"))
+
+EPD_DATES_coretops <- EPD_DATES_coretops %>%
+  dplyr::mutate(date_type = dplyr::case_when(
+    date_type %>% stringr::str_detect("core top estimated") ~
+      "Top of core estimated",
+    date_type %>% stringr::str_detect("core estimated") ~
+      "Top of core estimated",
+    date_type %>% stringr::str_detect("core top known") ~
+      "Top of core known",
+    date_type %>% stringr::str_detect("core known") ~
+      "Top of core known",
+    date_type %>% stringr::str_detect("isotopic correlation") ~
+      "Isotopic correlation",
+    date_type %>% stringr::str_detect("pollen correlation") ~
+      "Pollen correlation",
+    date_type %>% stringr::str_detect("stratigraphic correlation") ~
+      "Stratigraphic correlation",
+    TRUE ~ as.character(date_type)
+  ))
+
+EPD_DATES_2 <- EPD_DATES %>%
+  dplyr::filter(!is.na(entity_name)) %>%
+  dplyr::bind_rows(EPD_DATES_coretops) %>%
+  dplyr::distinct() %>%
+  dplyr::arrange(entity_name, depth, age_c14, age_cal)
+  # dplyr::group_by(entity_name, lab_num, depth) %>%
+  # dplyr::mutate(n = length(entity_name)) %>%
+  # dplyr::filter(n > 1)
+
+EPD_DATES_2 <- EPD_DATES
 usethis::use_data(EPD_DATES, overwrite = TRUE, compress = "xz")
 usethis::use_data(EPD_DATES_coretops, overwrite = TRUE, compress = "xz")
