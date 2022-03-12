@@ -5,7 +5,7 @@
 \alias{EPD_taxa_amalgamation}
 \title{\code{EPD_taxa_amalgamation}}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 3300 rows and 9 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 3300 rows and 7 columns.
 }
 \usage{
 EPD_taxa_amalgamation
