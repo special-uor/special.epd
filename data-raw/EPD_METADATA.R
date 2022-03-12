@@ -16,6 +16,9 @@ EPD_METADATA %>%
   dplyr::ungroup() %>%
   dplyr::filter(n > 1)
 
+# Exclude entities with single dates:
+single_date_entities <- c("LAIT3", "GRAMIGNE")
+
 EPD_METADATA_2 <- EPD_METADATA %>%
   dplyr::mutate(longitude = ifelse(entity_name == "STUPH-1",
                                    11.666833,
@@ -140,7 +143,36 @@ EPD_METADATA_4 <- EPD_METADATA_3 %>%
   dplyr::left_join(epd_site_types)
 
 EPD_METADATA <- EPD_METADATA_4
+
+# Load missing records' metadata ----
+epd_missing_records <-
+  readr::read_csv("inst/extdata/epd_missing_records_metadata_2022-02-24.csv")
+
+# Load extra records from the EMBSeCBIO and IBERIAN subsets
+conn <- dabr::open_conn_mysql("SPECIAL-EPD",
+                              password = rstudioapi::askForPassword())
+special_epd_extra_records <- dabr::select_all(conn, "entity") %>%
+  dplyr::filter(ID_SITE > 1447)
+
+# NOTE: previously 'Lake Saloio' was recorded twice, the records have now been
+# merged into entity 828 (ID_ENTITY = 1651 can be reused)
+special.epd::get_entity(conn, c(828, 1651))
+dabr::select(conn,
+             "SELECT * FROM external_link WHERE ID_ENTITY IN (828, 1651)")
+special.epd::dump_all(conn, ID_ENTITY = c(828, 1651))
+
+EPD_METADATA_5 <- EPD_METADATA %>%
+  dplyr::bind_rows(special_epd_extra_records,
+                   epd_missing_records)
+if(length(unique(EPD_METADATA_5$entity_name)) != nrow(EPD_METADATA_5)) {
+  EPD_METADATA_5 %>%
+    dplyr::group_by(entity_name) %>%
+    dplyr::mutate(n = length(entity_name)) %>%
+    dplyr::filter(n > 1)
+}
+
+EPD_METADATA <- EPD_METADATA_5
 usethis::use_data(EPD_METADATA, overwrite = TRUE, compress = "xz")
 
 # EPD_METADATA %>%
-#   readr::write_excel_csv("~/Downloads/epd-records-extracted-from-neotoma_metadata_2022-02-15.csv", na = "")
+#   readr::write_excel_csv("inst/extdata/epd-records-extracted-from-neotoma_metadata_2022-03-07.csv", na = "")

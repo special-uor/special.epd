@@ -13,8 +13,32 @@
 #' \code{EPD_METADATA}
 "EPD_METADATA"
 
+#' \code{EPD_taxa_amalgamation}
+"EPD_taxa_amalgamation"
+
+#' \code{EPD_taxa_to_exclude}
+"EPD_taxa_to_exclude"
+
 #' \code{IBERIA_pollen_dates}
 "IBERIA_pollen_dates"
 
 #' \code{IBERIA_pollen}
 "IBERIA_pollen"
+
+
+#' \code{age_model}
+"age_model"
+#' \code{date_info}
+"date_info"
+#' \code{entity}
+"entity"
+#' \code{external_link}
+"external_link"
+#' \code{model_name}
+"model_name"
+#' \code{pollen_count}
+"pollen_count"
+#' \code{sample}
+"sample"
+#' \code{taxon_name}
+"taxon_name"
