@@ -1,4 +1,7 @@
-#' Dump all the data linked to entities
+#' Create a snapshot of the data linked to entities
+#'
+#' Create a snapshot of the data linked to entities. Including metadata,
+#' dates, samples, age models and pollen counts.
 #'
 #' @param conn DB connection object.
 #' @param ID_SITE Optional, if `ID_ENTITY` or `entity_name` are provided.
@@ -8,13 +11,13 @@
 #'
 #' @return List with the individual tables.
 #' @export
-dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
+snapshot <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
   if (!missing(ID_SITE)) {
-    .dump_all_by_site(conn, ID_SITE, quiet = quiet)
+    .snapshot_by_site(conn, ID_SITE, quiet = quiet)
   } else if (!missing(ID_ENTITY)) {
-    .dump_all_by_entity(conn, ID_ENTITY, quiet = quiet)
+    .snapshot_by_entity(conn, ID_ENTITY, quiet = quiet)
   } else if (!missing(entity_name)) {
-    .dump_all_by_entity_name(conn, entity_name, quiet = quiet)
+    .snapshot_by_entity_name(conn, entity_name, quiet = quiet)
   } else {
     message("At least of the following is required:\n",
             "- ID_SITE\n- ID_ENTITY\n- entity_name\n")
@@ -22,17 +25,17 @@ dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
 }
 
 #' @keywords internal
-.dump_all_by_site <- function(conn, ID_SITE, quiet = TRUE) {
+.snapshot_by_site <- function(conn, ID_SITE, quiet = TRUE) {
   entity_tb <- conn %>%
     dabr::select("SELECT ID_ENTITY FROM entity WHERE ID_SITE IN (",
                  paste0(ID_SITE, collapse = ", "),
                  ")",
                  quiet = quiet)
-  return(.dump_all_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
+  return(.snapshot_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
 }
 
 #' @keywords internal
-.dump_all_by_entity <- function(conn, ID_ENTITY, quiet = TRUE) {
+.snapshot_by_entity <- function(conn, ID_ENTITY, quiet = TRUE) {
   entity_tb <- conn %>%
     dabr::select("SELECT * FROM entity WHERE ID_ENTITY IN (",
                  paste0(ID_ENTITY, collapse = ", "),
@@ -144,13 +147,13 @@ dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
 }
 
 #' @keywords internal
-.dump_all_by_entity_name <- function(conn, entity_name, quiet = TRUE) {
+.snapshot_by_entity_name <- function(conn, entity_name, quiet = TRUE) {
   entity_tb <- conn %>%
     dabr::select("SELECT ID_ENTITY FROM entity WHERE entity_name IN (",
                  paste0(dabr::quote(entity_name), collapse = ", "),
                  ")",
                  quiet = quiet)
-  return(.dump_all_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
+  return(.snapshot_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
 }
 
 #' Write DB snapshot to disk
@@ -164,7 +167,7 @@ dump_all <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
 write_csvs <- function(x, prefix) {
   if (!("special.epd" %in% class(x)))
     stop("The given object does not look like a valid snapshot from the ",
-         "`SPECIAL-EPD database. Try using the function `dump_all` first.",
+         "`SPECIAL-EPD database. Try using the function `snapshot` first.",
          call. = FALSE)
   if (!dir.exists(dirname(prefix)))
     stop("The provided directory, `", dirname(prefix), "`, does not exist.",
