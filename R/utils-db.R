@@ -3,15 +3,31 @@
 #' Create a snapshot of the data linked to entities. Including metadata,
 #' dates, samples, age models and pollen counts.
 #'
-#' @param conn DB connection object.
+#' @param conn DB connection object. If none (or invalid connection object) is
+#'     passed, then defaults to use the latest version of the data, included
+#'     in this package.
+#' @param ... Optional parameters.
+#'
+#' @rdname snapshot
+#' @export
+snapshot <- function(conn, ...) {
+  UseMethod("snapshot", conn)
+}
+
+# @param conn DB connection object.
 #' @param ID_SITE Optional, if `ID_ENTITY` or `entity_name` are provided.
 #' @param ID_ENTITY Optional, if `ID_SITE` or `entity_name` are provided.
 #' @param entity_name Optional, if `ID_SITE` or `ID_ENTITY` are provided.
 #' @param quiet Boolean flag to indicate if queries should be displayed.
 #'
+#' @rdname snapshot
 #' @return List with the individual tables.
 #' @export
-snapshot <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
+snapshot.MariaDBConnection <- function(conn,
+                                       ID_SITE,
+                                       ID_ENTITY,
+                                       entity_name,
+                                       quiet = TRUE) {
   if (!missing(ID_SITE)) {
     .snapshot_by_site(conn, ID_SITE, quiet = quiet)
   } else if (!missing(ID_ENTITY)) {
@@ -19,9 +35,19 @@ snapshot <- function(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE) {
   } else if (!missing(entity_name)) {
     .snapshot_by_entity_name(conn, entity_name, quiet = quiet)
   } else {
-    message("At least of the following is required:\n",
+    message("At least one of the following is required:\n",
             "- ID_SITE\n- ID_ENTITY\n- entity_name\n")
   }
+}
+
+#' @rdname snapshot
+#' @return List with the individual tables.
+#' @export
+snapshot.default <- function(conn,
+                             ID_SITE,
+                             ID_ENTITY,
+                             entity_name) {
+  message("Calling default snapshot...")
 }
 
 #' @keywords internal
