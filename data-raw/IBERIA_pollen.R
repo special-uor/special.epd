@@ -23,8 +23,11 @@ iberia_ids <- IBERIA_pollen_v2 %>%
   dplyr::left_join(iberia_entity_ids) %>%
   dplyr::relocate(ID_SITE, ID_ENTITY, .before = 1)
 IBERIA_pollen_v2 <- iberia_ids %>%
+  dplyr::select(-site_name) %>%
   dplyr::right_join(IBERIA_pollen_v2 %>%
-                      dplyr::select(-dplyr::starts_with("ID_SITE|ID_ENTITY")))
+                      dplyr::select(-dplyr::starts_with("ID_SITE|ID_ENTITY")),
+                    by = "entity_name") %>%
+  dplyr::relocate(site_name, .before = entity_name)
 ## v3 ----
 IBERIA_pollen_v2_ids <- IBERIA_pollen_v2 %>%
   dplyr::distinct(site_name, entity_name, .keep_all = TRUE) %>%
@@ -32,7 +35,8 @@ IBERIA_pollen_v2_ids <- IBERIA_pollen_v2 %>%
   dplyr::mutate(site_name = site_name %>%
                   stringr::str_replace_all("Eix", "Elx"),
                 entity_name = entity_name %>%
-                  stringr::str_replace_all("EIX", "ELX"))
+                  stringr::str_replace_all("EIX", "ELX")) %>%
+  dplyr::select(-site_name)
 
 IBERIA_pollen_v3 <-
   "inst/extdata/Iberia_pollen_records_v3_0307.csv" %>%
@@ -41,18 +45,19 @@ IBERIA_pollen_v3 <-
   dplyr::left_join(IBERIA_pollen_v2_ids) %>%
   dplyr::relocate(ID_SITE, ID_ENTITY, .before = 1) %>%
   dplyr::arrange(ID_SITE, ID_ENTITY)
-
 IBERIA_pollen_v3_ids <- IBERIA_pollen_v3 %>%
   dplyr::distinct(site_name, entity_name, .keep_all = TRUE) %>%
-  dplyr::select(1:4)
+  dplyr::select(1:4) %>%
+  dplyr::select(-site_name)
 waldo::compare(IBERIA_pollen_v2_ids, IBERIA_pollen_v3_ids)
+
 data("IBERIA_pollen") # Load version 2 of the IBERIAN POLLEN data
 waldo::compare(IBERIA_pollen, IBERIA_pollen_v2)
-IBERIA_pollen_v2_summary <- IBERIA_pollen %>%
+IBERIA_pollen_v2_summary <- IBERIA_pollen_v2 %>%
   dplyr::group_by(ID_SITE, ID_ENTITY) %>%
   dplyr::mutate(n_old = dplyr::n()) %>%
   dplyr::distinct(ID_SITE, ID_ENTITY, n_old)
-IBERIA_pollen_v3_summary <- IBERIA_pollen_2 %>%
+IBERIA_pollen_v3_summary <- IBERIA_pollen_v3 %>%
   dplyr::group_by(ID_SITE, ID_ENTITY) %>%
   dplyr::mutate(n_new = dplyr::n()) %>%
   dplyr::distinct(ID_SITE, ID_ENTITY, n_new)
@@ -76,12 +81,18 @@ IBERIA_pollen_dates_v2 <- "inst/extdata/Iberia_pollen_dates.xlsx" %>%
   dplyr::mutate(error = dplyr::coalesce(error, error_cal)) %>%
   dplyr::select(-error_cal)
 IBERIA_pollen_dates_v2 <- iberia_ids %>%
-  dplyr::right_join(IBERIA_pollen_dates_v2)
+  dplyr::right_join(IBERIA_pollen_dates_v2 %>%
+                      dplyr::select(-site_name),
+                    by = "entity_name")
 
 ## v3 ----
 IBERIA_pollen_dates_v3 <- "inst/extdata/Iberia_data_dates_v3.xlsx" %>%
   readxl::read_excel(sheet = 1) %>%
   janitor::clean_names() %>%
+  dplyr::mutate(site_name = site_name %>%
+                  stringr::str_replace_all("Eix", "Elx"),
+                entity_name = entity_name %>%
+                  stringr::str_replace_all("EIX", "ELX")) %>%
   dplyr::rename(lab_num = lab_number, #date_code,
                 depth = avg_depth,
                 # thickness = thickness_cm,
@@ -91,13 +102,17 @@ IBERIA_pollen_dates_v3 <- "inst/extdata/Iberia_data_dates_v3.xlsx" %>%
                 ) %>%
   dplyr::mutate(error = dplyr::coalesce(error, error_cal)) %>%
   dplyr::select(-error_cal)
-IBERIA_pollen_dates_v3 <- iberia_ids %>%
-  dplyr::right_join(IBERIA_pollen_dates_v3)
+IBERIA_pollen_dates_v3 <- IBERIA_pollen_v2_ids %>%
+  dplyr::right_join(IBERIA_pollen_dates_v3 %>%
+                      dplyr::select(-site_name),
+                    by = "entity_name")
 
 usethis::use_data(IBERIA_pollen_dates_v2, overwrite = TRUE, compress = "xz")
 usethis::use_data(IBERIA_pollen_dates_v3, overwrite = TRUE, compress = "xz")
 
-waldo::compare(IBERIA_pollen_dates_v2, IBERIA_pollen_dates_v3)
+waldo::compare(IBERIA_pollen_dates_v2,
+               IBERIA_pollen_dates_v3,
+               tolerance = 1E-9)
 
 # Counts ----
 # IBERIA_pollen_counts <- "inst/extdata/iberia_pollen_records_v2.csv" %>%
