@@ -103,11 +103,26 @@ extract_embsecbio <- function(ID_ENTITY = NULL) {
        age_model = sample_age_model_tb)
 }
 
-extract_iberia <- function(entity_name = NULL) {
+extract_iberia <- function(entity_name = NULL, v2 = FALSE) {
   if (missing(entity_name))
     return(NULL)
-  data("IBERIA_pollen")
-  data("IBERIA_pollen_dates")
+  if (v2) {
+    message("Loading version 3...")
+    data("IBERIA_pollen_v2")
+    data("IBERIA_pollen_dates_v2")
+    IBERIA_pollen <- IBERIA_pollen_v2
+    IBERIA_pollen_dates <- IBERIA_pollen_dates_v2
+    rm("IBERIA_pollen_v2", "IBERIA_pollen_dates_v2")
+  } else {
+    message("Loading version 3...")
+    data("IBERIA_pollen_v3")
+    data("IBERIA_pollen_dates_v3")
+    IBERIA_pollen <- IBERIA_pollen_v3
+    IBERIA_pollen_dates <- IBERIA_pollen_dates_v3
+    rm("IBERIA_pollen_v3", "IBERIA_pollen_dates_v3")
+  }
+  # data("IBERIA_pollen")
+  # data("IBERIA_pollen_dates")
   entity_age_model_tb <- IBERIA_pollen %>%
     dplyr::filter(entity_name %in% !!entity_name) %>%
     dplyr::select(1:17) %>%
@@ -118,7 +133,7 @@ extract_iberia <- function(entity_name = NULL) {
 
   date_info_tb <- IBERIA_pollen_dates %>%
     dplyr::filter(entity_name %in% !!entity_name) %>%
-    dplyr::select(-type)
+    dplyr::select(-dplyr::starts_with("type"))
   sample_tb <- IBERIA_pollen %>%
     dplyr::filter(entity_name %in% !!entity_name) %>%
     dplyr::select(1:17) %>%
@@ -495,8 +510,8 @@ epd_age_models_not_uploaded <- epd_age_models %>%
   dplyr::filter(age_model_run_successfully_ready_to_check %>%
                   stringr::str_detect("one date", negate = TRUE))
 
-epd_age_models_not_uploaded %>%
-  readr::write_excel_csv("~/Downloads/epd_age_models_not_uploaded.csv")
+# epd_age_models_not_uploaded %>%
+#   readr::write_excel_csv("~/Downloads/epd_age_models_not_uploaded.csv")
 
 find_age_models(path) %>%
   dplyr::filter(entity_name %in% epd_age_models_ready_to_upload$entity_name)
@@ -2495,7 +2510,7 @@ dabr::select_all(conn, "sample") %>%
 extract_embsecbio(c(1341, 1342))
 dabr::select(conn, "SELECT * FROM age_model WHERE ID_SAMPLE BETWEEN 5813 AND 5870")
 
-#### (PENDING) Counts ----
+#### Counts ----
 EPD_SAMPLES_NEO_DB <- dabr::select_all(conn, "sample") %>%
   dplyr::filter(ID_ENTITY %in% embsecbio_extra_repatriated_am_info_4$ID_ENTITY) %>%
   dplyr::select(ID_ENTITY,
@@ -2729,8 +2744,8 @@ embsecbio_extra_pollen_counts %>%
 
 
 ## IBERIA ----
-data("IBERIA_pollen")
-data("IBERIA_pollen_dates")
+# data("IBERIA_pollen")
+# data("IBERIA_pollen_dates")
 iberia_repatriation <- epd_repatriation_tmp_file %>%
   readxl::read_excel(sheet = 4) %>%
   janitor::clean_names() %>%
@@ -2741,7 +2756,11 @@ iberia_repatriation <- epd_repatriation_tmp_file %>%
                   to_bool(age_model_to_be_extracted_from_iberia)) %>%
   dplyr::rename(IBERIA_ID_ENTITY = iberia_id_entity,
                 IBERIA_site_name = site_name_in_iberia,
-                IBERIA_entity_name = entity_name_in_iberia)
+                IBERIA_entity_name = entity_name_in_iberia) %>%
+  dplyr::mutate(IBERIA_site_name = IBERIA_site_name %>%
+                  stringr::str_replace_all("Eix", "Elx"),
+                IBERIA_entity_name = IBERIA_entity_name %>%
+                  stringr::str_replace_all("EIX", "ELX"))
 
 # iberia_repatriation %>%
 #   dplyr::arrange(IBERIA_site_name, IBERIA_entity_name) %>%
@@ -2754,12 +2773,13 @@ iberia_repatriation <- epd_repatriation_tmp_file %>%
 #   dplyr::distinct() %>%
 #   dplyr::filter(entity_name %in% iberia_repatriation_dates$IBERIA_entity_name)
 
-### IBERIA dates (83) ----
+### IBERIA dates (84) ----
 iberia_repatriation_dates <- iberia_repatriation %>%
   dplyr::filter(dates_to_be_extracted_from_iberia)
 
 iberia_repatriated_dates_info <-
   iberia_repatriation_dates$IBERIA_entity_name %>%
+  stringr::str_replace_all("EIX", "ELX") %>%
   extract_iberia()
 
 iberia_repatriated_dates_info_2 <- iberia_repatriation_dates %>%
@@ -2767,11 +2787,8 @@ iberia_repatriated_dates_info_2 <- iberia_repatriation_dates %>%
                 neotoma_site_name = site_name,
                 neotoma_entity_name = entity_name,
                 entity_name = IBERIA_entity_name) %>%
-                # ID_ENTITY = IBERIA_ID_ENTITY) %>%
   dplyr::inner_join(iberia_repatriated_dates_info$metadata,
                     by = "entity_name") %>%
-  # dplyr::mutate(external_ID_ENTITY = NA,
-  #               external_ID_SITE =  NA) %>%
   dplyr::rename(external_ID_ENTITY = ID_ENTITY,
                 external_ID_SITE =  ID_SITE,
                 external_site_name = site_name,
@@ -2783,6 +2800,15 @@ iberia_repatriated_dates_info_3 <- EPD_METADATA %>%
                     by = c("entity_name" = "neotoma_entity_name"))
 
 #### External links ----
+dabr::select(conn,
+             "SELECT * FROM external_link WHERE ID_ENTITY = 387 AND",
+             "external_source = 'IBERIA'")
+dabr::update(conn,
+             "UPDATE external_link SET external_site_name = 'Elx',",
+             "external_entity_name = 'ELX' WHERE",
+             "ID_SITE = 351 AND ID_ENTITY = 387 AND external_source = 'IBERIA'")
+# Results: 1 record was updated.
+
 meta_neo_res <- seq_len(nrow(iberia_repatriated_dates_info_3)) %>%
   purrr::map(function(i) {
     iberia_repatriated_dates_info_3[i, ] %>%
@@ -2817,23 +2843,61 @@ waldo::compare(iberia_repatriated_dates_info_3 %>%
                  dplyr::mutate(external_ID_SITE = as.integer(external_ID_SITE),
                                external_ID_ENTITY = as.integer(external_ID_ENTITY)),
                EPD_NEO_DB,
-               tolerance = 1e-9)
+               tolerance = 1E-9)
 
 #### Dates ----
+# Pull existing ID_DATE_INFO
+EPD_DATES_NEO_DB <- dabr::select_all(conn, "date_info") %>%
+  dplyr::filter(ID_ENTITY %in% iberia_repatriated_dates_info_4$ID_ENTITY)
+unique(EPD_DATES_NEO_DB$ID_DATE_INFO)
+unique(EPD_DATES_NEO_DB$ID_ENTITY)
+# readr::read_csv("inst/extdata/epd-special-iberia-v2-dates_2022-03-16.csv")
+# EPD_DATES_NEO_DB %>%
+#   readr::write_excel_csv("inst/extdata/epd-special-iberia-v2-dates_2022-03-16.csv")
+
+# dabr::select(conn,
+#              "SELECT * FROM date_info WHERE ID_ENTITY IN (",
+#              paste0(EPD_DATES_NEO_DB$ID_ENTITY, collapse = ", "),
+#              ")")
+# dabr::delete(conn,
+#              "DELETE FROM date_info WHERE ID_ENTITY IN (",
+#              paste0(EPD_DATES_NEO_DB$ID_ENTITY, collapse = ", "),
+#              ")")
+# Results: 618 records were deleted.
+
 iberia_repatriated_dates_info_4 <-
   iberia_repatriated_dates_info$date_info %>%
   dplyr::select(-ID_SITE) %>%
+  dplyr::mutate(
+    lab_num = dplyr::case_when(
+      stringr::str_detect(lab_num, "NULL") ~ NA_character_,
+      TRUE ~ lab_num
+    ),
+    material_dated = dplyr::case_when(
+      stringr::str_detect(material_dated, "NULL") ~ NA_character_,
+      TRUE ~ material_dated
+    )) %>%
   dplyr::rename(external_ID_ENTITY = ID_ENTITY,
                 reason_age_not_used = notes,
                 age_calib = age_cal) %>%
   dplyr::mutate(age_used = ifelse(is.na(reason_age_not_used), "yes", "no")) %>%
   dplyr::left_join(iberia_repatriated_dates_info_3 %>%
                      dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
-  dplyr::select(-external_ID_ENTITY, -site_name, -entity_name) %>%
+  dplyr::select(-external_ID_ENTITY, -entity_name) %>%
   dplyr::relocate(ID_ENTITY, .before = 1) %>%
-  dplyr::mutate(ID_DATE_INFO = c(657:1010, 1471, 1472, 1011:1272))
+  dplyr::mutate(ID_DATE_INFO = 9938 + seq_along(ID_ENTITY)) # get_id_date_info(conn)
+  # dplyr::mutate(ID_DATE_INFO = c(657:1010, 1471, 1472, 1011:1272))
   # dplyr::mutate(ID_DATE_INFO = c(657:1272, 1471, 1472))
 # IDs 1471 and 1472 are linked to Lake Saloio (SALOIO, 828)
+
+iberia_repatriated_dates_info_4 %>%
+  dplyr::filter(is.na(ID_ENTITY) | is.na(ID_DATE_INFO))
+# Find gaps in the table (i.e. non-continuous ID_DATE_INFO)
+aa <- dabr::select_all(conn, "date_info")
+tibble::tibble(ID_DATE_INFO = seq_len(max(aa$ID_ENTITY))) %>%
+  dplyr::left_join(aa) %>%
+  dplyr::filter(is.na(ID_ENTITY)) %>%
+  .$ID_DATE_INFO
 
 meta_neo_res <- seq_len(nrow(iberia_repatriated_dates_info_4)) %>%
   purrr::map(function(i) {
@@ -2860,6 +2924,7 @@ iberia_repatriation_am <- iberia_repatriation %>%
 
 iberia_repatriated_am_info <-
   iberia_repatriation_am$IBERIA_entity_name %>%
+  stringr::str_replace_all("EIX", "ELX") %>%
   extract_iberia()
 
 iberia_repatriated_am_info_2 <- iberia_repatriation_am %>%
@@ -2868,7 +2933,7 @@ iberia_repatriated_am_info_2 <- iberia_repatriation_am %>%
                 neotoma_entity_name = entity_name,
                 entity_name = IBERIA_entity_name) %>%
   # ID_ENTITY = IBERIA_ID_ENTITY) %>%
-  dplyr::inner_join(iberia_repatriated_am_info$metadata,
+  dplyr::left_join(iberia_repatriated_am_info$metadata,
                     by = "entity_name") %>%
   dplyr::rename(external_ID_ENTITY = ID_ENTITY,
                 external_ID_SITE =  ID_SITE,
@@ -2934,6 +2999,26 @@ iberia_repatriated_am_info_5 <- iberia_repatriated_am_info_4 %>%
   #                 # 6232 + seq_along(ID_ENTITY), # get_id_sample(conn)
   #               .before = 1)
 
+# Dump old samples:
+# dabr::select(conn,
+#              "SELECT * FROM sample WHERE ID_SAMPLE IN (",
+#              paste0(c(6233L:7041L, 7144L:8130L, 8230L:9824L, 9857L:11040L, 12409L:12432L),
+#                     collapse = ", "),
+#              ")") %>%
+#   readr::write_excel_csv("inst/extdata/epd-special-iberia-v2-samples_2022-03-16.csv")
+
+# dabr::delete(conn,
+#              "DELETE FROM sample WHERE ID_SAMPLE IN (",
+#              paste0(c(6233L:7041L, 7144L:8130L, 8230L:9824L, 9857L:11040L, 12409L:12432L),
+#                     collapse = ", "),
+#              ")")
+# # Results: 4599 records were deleted.
+dabr::select(conn,
+             "SELECT * FROM sample WHERE ID_SAMPLE IN (",
+             paste0(c(6233L:7041L, 7144L:8130L, 8230L:9824L, 9857L:11040L, 12409L:12432L),
+                    collapse = ", "),
+             ")")
+
 # Verify if the EPD has more samples than the IBERIA
 tibble::tibble(
   ID_ENTITY = names(table(iberia_repatriated_am_info_EPD_COUNTS$ID_ENTITY)),
@@ -2945,11 +3030,13 @@ tibble::tibble(
 # Verify if the "new" samples exist in the DB
 dabr::select_all(conn, "sample") %>%
   dplyr::filter(ID_SAMPLE %in% iberia_repatriated_am_info_5$ID_SAMPLE)
+dabr::select_all(conn, "sample") %>%
+  dplyr::filter(ID_ENTITY %in% iberia_repatriated_am_info_5$ID_ENTITY)
 
-meta_neo_res <- seq_len(nrow(iberia_repatriated_am_info_5))[-1] %>%
+meta_neo_res <- seq_len(nrow(iberia_repatriated_am_info_5)) %>%
   purrr::map(function(i) {
     iberia_repatriated_am_info_5[i, ] %>%
-      dplyr::select(1:8) %>%
+      dplyr::select(1:9) %>%
       rpd:::add_records(conn = conn, table = "sample", dry_run = TRUE)
   })
 meta_neo_res %>% purrr::flatten_lgl() %>% sum()
@@ -2959,7 +3046,6 @@ EPD_DATES_NEO_DB <- dabr::select_all(conn, "sample") %>%
 waldo::compare(iberia_repatriated_am_info_5 %>%
                  dplyr::select(1:9) %>%
                  .[order(colnames(.))] %>%
-                 dplyr::select(-ID_SAMPLE) %>%
                  dplyr::mutate(depth = round(depth, 3),
                                age = round(age)) %>%
                  dplyr::arrange(ID_ENTITY, depth),
@@ -2972,8 +3058,26 @@ waldo::compare(iberia_repatriated_am_info_5 %>%
                tolerance = 1E-9,
                max_diffs = Inf)
 
+# sort(unique(EPD_DATES_NEO_DB$ID_ENTITY))[36:38]
+# EPD_DATES_NEO_DB %>%
+#   dplyr::filter(ID_ENTITY == 827) %>% .$ID_SAMPLE %>% range()
+# iberia_repatriated_am_info_5 %>%
+#   dplyr::filter(ID_ENTITY == 827) %>% .$ID_SAMPLE %>% range()
+# aux <- sort(unique(EPD_DATES_NEO_DB$ID_ENTITY)) %>%
+#   purrr::map(function(i) {
+#     db <- EPD_DATES_NEO_DB %>%
+#       dplyr::filter(ID_ENTITY == i) %>%
+#       dplyr::select(-count_type, -sample_type) %>%
+#       .[order(colnames(.))]
+#     ss <- iberia_repatriated_am_info_5 %>%
+#       dplyr::filter(ID_ENTITY == i) %>%
+#       dplyr::select(1:9) %>%
+#       .[order(colnames(.))]
+#     waldo::compare(ss, db, x_arg = "SS", y_arg = "DB", tolerance = 1E-9)
+#   })
+
 #### Age models ----
-meta_neo_res <- seq_len(nrow(iberia_repatriated_am_info_5))[-1] %>%
+meta_neo_res <- seq_len(nrow(iberia_repatriated_am_info_5)) %>%
   purrr::map(function(i) {
     iberia_repatriated_am_info_5[i, ] %>%
       dplyr::select(1, 10:15) %>%
@@ -2992,6 +3096,262 @@ waldo::compare(iberia_repatriated_am_info_5 %>%
                  .[order(colnames(.))], tolerance = 2)
 
 #### HERE: COUNTS ----
+
+### non-IBERIA age models (15) ----
+# NOTE: even though these entities were marked as "non-IBERIAN", the latest
+# version of the Iberian subset contains all the necessary updates.
+non_iberia_repatriation_am <- iberia_repatriation %>%
+  dplyr::filter(!age_model_to_be_extracted_from_iberia)
+
+non_iberia_repatriated_am_info <-
+  non_iberia_repatriation_am$IBERIA_entity_name %>%
+  extract_iberia()
+
+non_iberia_repatriated_am_info_2 <- non_iberia_repatriation_am %>%
+  dplyr::select(neotoma_ID_SITE = site_id,
+                neotoma_site_name = site_name,
+                neotoma_entity_name = entity_name,
+                entity_name = IBERIA_entity_name) %>%
+  dplyr::left_join(non_iberia_repatriated_am_info$metadata,
+                   by = "entity_name") %>%
+  dplyr::rename(external_ID_ENTITY = ID_ENTITY,
+                external_ID_SITE =  ID_SITE,
+                external_site_name = site_name,
+                external_entity_name = entity_name)
+
+non_iberia_repatriated_am_info_3 <- EPD_METADATA %>%
+  dplyr::select(1:4, 6, 10) %>%
+  dplyr::right_join(non_iberia_repatriated_am_info_2 %>%
+                      dplyr::select(1:7),
+                    by = c("entity_name" = "neotoma_entity_name"))
+
+non_iberia_repatriated_am_info_EPD_COUNTS <- EPD_COUNTS %>%
+  dplyr::filter(entity_name %in%
+                  non_iberia_repatriated_am_info_3$entity_name) %>%
+  smpds::rm_na_taxa(1:16) %>%
+  dplyr::select(-chronology_id) %>%
+  dplyr::left_join(EPD_METADATA %>%
+                     dplyr::select(1:3, 6, 10),
+                   by = c("site_id", "dataset_id", "entity_name")) %>%
+  dplyr::relocate(ID_SITE, ID_ENTITY, .before = 1)
+
+# non_iberia_repatriated_am_info_2 <- non_iberia_repatriated_am_info_EPD_COUNTS %>%
+#   dplyr::mutate(ID_SAMPLE = 28481 + seq_along(ID_ENTITY), # get_id_sample(conn)
+#                 .after = ID_ENTITY) %>%
+#   dplyr::select(-ID_SITE, -site_id, -site_name, -site_name_clean, -dataset_id, -dataset_name, -entity_name, -sample_id, -unit_name)
+#
+# # Check if the "new" records are already in th DB:
+# special.epd::snapshot(conn, ID_ENTITY = non_iberia_repatriated_am_info_2$ID_ENTITY)
+# dabr::select_all(conn, "sample") %>%
+#   dplyr::filter(ID_SAMPLE %in% non_iberia_repatriated_am_info_2$ID_SAMPLE |
+#                   ID_ENTITY %in% non_iberia_repatriated_am_info_2$ID_ENTITY)
+
+
+#### Samples ----
+# non_iberia_repatriated_am_info_EPD_COUNTS <- EPD_COUNTS %>%
+#   dplyr::filter(dataset_id %in%
+#                   non_iberia_repatriated_am_info$external_ID_ENTITY) %>%
+#   smpds::rm_na_taxa(1:16) %>%
+#   dplyr::select(-chronology_id) %>%
+#   dplyr::left_join(EPD_METADATA %>%
+#                      dplyr::select(1:3, 6, 10),
+#                    by = c("site_id", "dataset_id", "entity_name")) %>%
+#   dplyr::relocate(ID_SITE, ID_ENTITY, .before = 1) #%>%
+# # dplyr::mutate(depth = ifelse(ID_ENTITY == 365 & depth == 0, 0.5, depth)) # Update depth GDU: 0 -> 0.5
+# non_iberia_repatriated_am_info_EPD_COUNTS
+
+
+non_iberia_repatriated_am_info_4 <- non_iberia_repatriated_am_info$age_model %>%
+  dplyr::select(-ID_SITE) %>%
+  dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+  dplyr::select(-entity_name) %>%
+  dplyr::left_join(non_iberia_repatriated_am_info_3 %>%
+                     dplyr::select(ID_ENTITY, external_ID_ENTITY, entity_name),
+                   by = "external_ID_ENTITY") %>%
+  dplyr::select(-external_ID_ENTITY) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::select(-site_name, #-entity_name,
+                -latitude, -longitude, -elevation, -source, -publication)
+
+dim(non_iberia_repatriated_am_info_EPD_COUNTS)
+dim(non_iberia_repatriated_am_info_4)
+
+# a <- non_iberia_repatriated_am_info_EPD_COUNTS %>%
+#   dplyr::group_by(entity_name) %>%
+#   dplyr::select(1:16) %>%
+#   dplyr::mutate(n_epd = length(ID_ENTITY),
+#                 depths_epd = tibble::tibble(source = "EPD",
+#                                             depth) %>% list()) %>%
+#   dplyr::distinct(entity_name, n_epd, depths_epd)
+#
+# b <- non_iberia_repatriated_am_info_4 %>%
+#   dplyr::group_by(entity_name) %>%
+#   dplyr::select(1:10) %>%
+#   dplyr::mutate(n_iberia = length(ID_ENTITY),
+#                 depths_iberia = tibble::tibble(source = "IBERIA",
+#                                                depth) %>% list()) %>%
+#   dplyr::distinct(entity_name, n_iberia, depths_iberia)
+#
+# dplyr::full_join(a, b) %>%
+#   dplyr::arrange(entity_name)
+# dplyr::full_join(a, b) %>%
+#   dplyr::arrange(entity_name) %>%
+#   purrr::pmap_df(function(entity_name, depths_epd, depths_iberia, ...) {
+#     dplyr::full_join(depths_epd, depths_iberia, by = "depth") %>%
+#       dplyr::filter(is.na(source.x) | is.na(source.y)) %>%
+#       dplyr::mutate(entity_name, .before = 1)
+#   })
+
+# Extract thickness from the EPD data
+non_iberia_repatriated_am_info_5 <- non_iberia_repatriated_am_info_4 %>%
+  dplyr::mutate(depth2 = round(depth, 3)) %>%
+  dplyr::left_join(non_iberia_repatriated_am_info_EPD_COUNTS %>%
+                     dplyr::select(ID_ENTITY, depth, thickness, chronology_name,
+                                   age_EPD = age, age_younger, age_older, age_type) %>%
+                     dplyr::mutate(depth = round(depth, 3)),
+                   by = c("ID_ENTITY",  "depth2" = "depth")) %>%
+  dplyr::select(-depth2) %>%
+  dplyr::relocate(thickness,
+                  # age_original,
+                  age_EPD,
+                  chronology_name,
+                  age_younger,
+                  age_older,
+                  age_type,
+                  .before = mean) %>%
+  dplyr::mutate(age = ifelse(is.na(age), round(age_EPD), age)) %>%
+  dplyr::mutate(lower = round(age_EPD) * 0.99,
+                upper = round(age_EPD) * 1.01,
+                same_age = (round(age) >= lower & round(age) <= upper) | (is.na(age) & is.na(age_EPD)),
+                chronology_name = ifelse(same_age, chronology_name, NA),
+                age_younger = ifelse(same_age, age_younger, NA),
+                age_older = ifelse(same_age, age_older, NA),
+                age_type = ifelse(same_age, age_type, NA)) %>%
+  dplyr::select(-age_EPD, -lower, -upper, -same_age)
+
+
+# Find existing samples
+existing_samples <- dabr::select(conn,
+                                 "SELECT * FROM sample WHERE ID_ENTITY IN (",
+                                 paste0(non_iberia_repatriated_am_info_5$ID_ENTITY,
+                                        collapse = ", "),
+                                 ")")
+
+samples_already_in_the_db <- non_iberia_repatriated_am_info_5 %>%
+  dplyr::left_join(existing_samples %>%
+                     dplyr::select(ID_ENTITY, ID_SAMPLE, depth)) %>%
+  dplyr::filter(!is.na(ID_SAMPLE)) %>% #.$ID_ENTITY %>% unique()
+  dplyr::relocate(ID_SAMPLE, .after = 1)
+
+waldo::compare(existing_samples %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-count_type, -sample_type),
+               samples_already_in_the_db[1:9] %>%
+                 .[order(colnames(.))],
+               tolerance = 1E-9)
+
+non_iberia_repatriated_am_info_6 <- non_iberia_repatriated_am_info_5 %>%
+  dplyr::left_join(existing_samples %>%
+                     dplyr::select(ID_ENTITY, ID_SAMPLE, depth)) %>%
+  dplyr::filter(is.na(ID_SAMPLE)) %>% #.$ID_ENTITY %>% unique()
+  dplyr::relocate(ID_SAMPLE, .after = 1) %>%
+  dplyr::mutate(ID_SAMPLE = 101360 + seq_along(ID_ENTITY)) # get_id_sample(conn)
+
+# Check if any of the samples exists
+dabr::select(conn,
+             "SELECT * FROM sample WHERE ID_SAMPLE IN (",
+             paste0(non_iberia_repatriated_am_info_6$ID_SAMPLE,
+                    collapse = ", "),
+             ")")
+
+meta_neo_res <- seq_len(nrow(non_iberia_repatriated_am_info_6)) %>%
+  purrr::map(function(i) {
+    non_iberia_repatriated_am_info_6[i, ] %>%
+      dplyr::select(1:9) %>%
+      rpd:::add_records(conn = conn, table = "sample", dry_run = TRUE)
+  })
+
+meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+##### Validate -----
+EPD_DATES_NEO_DB <- dabr::select_all(conn, "sample") %>%
+  dplyr::filter(ID_ENTITY %in% non_iberia_repatriated_am_info_6$ID_ENTITY)
+waldo::compare(non_iberia_repatriated_am_info_6 %>%
+                 dplyr::select(1:9) %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::mutate(depth = round(depth, 3),
+                               age = round(age)),
+               EPD_DATES_NEO_DB %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::mutate(depth = round(depth, 3),
+                               age = round(age)) %>%
+                 dplyr::select(-count_type, -sample_type),
+               tolerance = 1E-9)
+
+#### Age models (15) ----
+# non_iberia_repatriated_am_new <-
+#   find_age_models(path, non_iberia_repatriated_am_info$metadata$entity_name)
+#
+# # Check if the AM are ready to be uploaded
+# non_iberia_repatriated_am_new %>%
+#   dplyr::filter(entity_name %in% epd_age_models_ready_to_upload$entity_name)
+#
+# # Check if the age models already exist in the DB
+# special.epd::snapshot(conn, entity_name = non_iberia_repatriated_am_new$entity_name)
+#
+# non_iberia_repatriated_am_new2 <- non_iberia_repatriated_am_new %>%
+#   purrr::pmap_df(upload_age_model, conn = conn)
+# # Check if all the age models were uploaded
+# all(non_iberia_repatriated_am_new2$status)
+# non_iberia_repatriated_am_new2
+# non_iberia_repatriated_am_new3 <-
+#   non_iberia_repatriated_am_new2$am %>%
+#   purrr::map_df(~.x) %>%
+#   magrittr::set_names(colnames(.) %>% stringr::str_to_upper())
+samples_already_in_the_db
+non_iberia_repatriated_am_info_6
+# Delete old age models
+dabr::select(conn,
+             "SELECT * FROM age_model WHERE ID_SAMPLE IN (",
+             paste0(samples_already_in_the_db$ID_SAMPLE, collapse = ", "),
+             ") AND ID_MODEL = 8")
+# dabr::delete(conn,
+#              "DELETE FROM age_model WHERE ID_SAMPLE IN (",
+#              paste0(samples_already_in_the_db$ID_SAMPLE, collapse = ", "),
+#              ") AND ID_MODEL = 8")
+# special.epd::snapshot(conn,
+#                       entity_name = non_iberia_repatriated_am_new$entity_name)
+
+samples_already_in_the_db %>%
+  dplyr::select(ID_SAMPLE, mean, median, dplyr::starts_with("UNCERT")) %>%
+  dplyr::mutate(ID_MODEL = 8, .before = 2) %>%
+  rpd:::add_records(conn = conn, table = "age_model", dry_run = TRUE)
+non_iberia_repatriated_am_info_6 %>%
+  dplyr::select(ID_SAMPLE, mean, median, dplyr::starts_with("UNCERT")) %>%
+  dplyr::mutate(ID_MODEL = 8, .before = 2) %>%
+  rpd:::add_records(conn = conn, table = "age_model", dry_run = TRUE)
+##### Validate ----
+EPD_NEO_DB <- dabr::select_all(conn, "age_model") %>%
+  dplyr::filter(ID_SAMPLE %in% samples_already_in_the_db$ID_SAMPLE)
+waldo::compare(samples_already_in_the_db %>%
+                 dplyr::select(ID_SAMPLE, mean, median,
+                               dplyr::starts_with("UNCERT")) %>%
+                 dplyr::mutate(ID_MODEL = 8, .before = 2) %>%
+                 .[order(colnames(.))],
+               EPD_NEO_DB %>%
+                 .[order(colnames(.))],
+               tolerance = 1E-9)
+
+EPD_NEO_DB <- dabr::select_all(conn, "age_model") %>%
+  dplyr::filter(ID_SAMPLE %in% non_iberia_repatriated_am_info_6$ID_SAMPLE)
+waldo::compare(non_iberia_repatriated_am_info_6 %>%
+                 dplyr::select(ID_SAMPLE, mean, median,
+                               dplyr::starts_with("UNCERT")) %>%
+                 dplyr::mutate(ID_MODEL = 8, .before = 2) %>%
+                 .[order(colnames(.))],
+               EPD_NEO_DB %>%
+                 .[order(colnames(.))],
+               tolerance = 1E-9)
+
 
 ## IBERIA (extra) ----
 iberia_extra_repatriation <- epd_repatriation_tmp_file %>%
