@@ -115,6 +115,157 @@ waldo::compare(IBERIA_pollen_dates_v2,
                tolerance = 1E-9)
 
 # Counts ----
+## v3 - extra ----
+iberia_extra_counts_filenames <-
+  list.files(path = "~/Downloads/iberian_extra_sites/FOR DB",
+             pattern = ".xls",
+             full.names = TRUE) %>%
+  tibble::tibble() %>%
+  magrittr::set_names("path") %>%
+  dplyr::mutate(is_list = basename(path) %>%
+                  stringr::str_detect("_list|_LIST"),
+                site_name = basename(path) %>%
+                  stringr::str_remove_all(".xlsx|.xls") %>%
+                  stringr::str_remove_all("_list|_LIST"),
+                .before = 1)
+
+IBERIA_extra_counts_v3 <- iberia_extra_counts_filenames %>%
+  purrr::pmap_df(function(is_list, site_name, path, ...) {
+    message("Processing: ", site_name)
+    suppressMessages({
+      ss <- path %>%
+        readxl::read_excel(sheet = 1)
+    })
+    if (all(is.na(ss[1])) &
+        (colnames(ss)[2] %>%
+         stringr::str_detect("...2|Name|name|NAME"))) {
+      ss <- ss[-1]
+    }
+    no_count_col <- colnames(ss) %>%
+      stringr::str_detect("Count|count|COUNT") %>%
+      any
+    if (!is_list & !no_count_col) {
+      ss <- ss[c(1:4)] %>%
+        dplyr::bind_cols(purrr::map_dfc(ss[-c(1:4)], as.numeric)) %>%
+        # ss %>%
+        magrittr::set_names(
+          c("taxon_name", "clean", "intermediate", "amalgamated", colnames(.)[-c(1:4)])
+        ) %>%
+        tidyr::pivot_longer(cols = -c(1:4),
+                            names_to = "depth",
+                            values_to = "count"
+                            ) %>%
+        dplyr::mutate(depth = as.numeric(depth)) %>%
+        dplyr::arrange(depth, taxon_name) %>%
+        dplyr::filter(!is.na(count))
+    } else {
+      ss <- ss %>%
+        magrittr::set_names(
+          c("taxon_name", "clean", "intermediate", "amalgamated", "depth", "count")
+        ) %>%
+        # dplyr::arrange(taxon_name) %>%
+        dplyr::arrange(depth, taxon_name)
+    }
+    ss %>%
+      dplyr::mutate(site_name, #= rpd:::cln_str(site_name),
+                    .before = 1)
+  })
+
+IBERIA_extra_counts_v3_2 <- conn %>%
+  dabr::select("SELECT * FROM entity WHERE site_name in (",
+               IBERIA_extra_counts_v3 %>%
+                 dplyr::distinct(site_name) %>%
+                 purrr::map(dabr::quote) %>%
+                 purrr::flatten_chr() %>%
+                 stringr::str_c(collapse = ", "),
+               ")") %>%
+  dplyr::select(ID_SITE, ID_ENTITY, site_name, entity_name) %>%
+  dplyr::mutate(cln_site_name = rpd:::cln_str(site_name)) %>%
+  dplyr::right_join(IBERIA_extra_counts_v3 %>%
+                      dplyr::mutate(cln_site_name = rpd:::cln_str(site_name)),
+                    by = "cln_site_name") %>%
+  dplyr::rename(site_name = site_name.y) %>%
+  dplyr::select(-site_name.x, -cln_site_name)
+
+waldo::compare(IBERIA_extra_counts_v3 %>%
+                 dplyr::arrange(site_name, depth, taxon_name),
+               IBERIA_extra_counts_v3_2 %>%
+                 dplyr::arrange(site_name, depth, taxon_name) %>%
+                 dplyr::select(-ID_SITE, -ID_ENTITY, -entity_name))
+
+IBERIA_extra_counts_v3_2 %>%
+  dplyr::filter(is.na(ID_SITE) | is.na(ID_ENTITY))
+conn %>%
+  dabr::select("SELECT * FROM entity WHERE site_name in (",
+               IBERIA_extra_counts_v3_2 %>%
+                 dplyr::distinct(site_name) %>%
+                 purrr::map(dabr::quote) %>%
+                 purrr::flatten_chr() %>%
+                 stringr::str_c(collapse = ", "),
+               ")")
+
+IBERIA_extra_counts_v3 <- IBERIA_extra_counts_v3_2
+usethis::use_data(IBERIA_extra_counts_v3, overwrite = TRUE, compress = "xz")
+
+## new entities ----
+iberia_new_counts_filenames <-
+  list.files(path = "~/Downloads/iberian_extra_sites/FOR DB/NEW/",
+             pattern = ".xls",
+             full.names = TRUE) %>%
+  tibble::tibble() %>%
+  magrittr::set_names("path") %>%
+  dplyr::mutate(is_list = basename(path) %>%
+                  stringr::str_detect("_list|_LIST"),
+                site_name = basename(path) %>%
+                  stringr::str_remove_all(".xlsx|.xls") %>%
+                  stringr::str_remove_all("_list|_LIST") %>%
+                  stringr::str_remove_all("_new|_NEW"),
+                .before = 1)
+
+IBERIA_new_counts_v3 <- iberia_new_counts_filenames %>%
+  purrr::pmap_df(function(is_list, site_name, path, ...) {
+    message("Processing: ", site_name)
+    suppressMessages({
+      ss <- path %>%
+        readxl::read_excel(sheet = 1)
+    })
+    if (all(is.na(ss[1])) &
+        (colnames(ss)[2] %>%
+         stringr::str_detect("...2|Name|name|NAME"))) {
+      ss <- ss[-1]
+    }
+    no_count_col <- colnames(ss) %>%
+      stringr::str_detect("Count|count|COUNT") %>%
+      any
+    if (!is_list & !no_count_col) {
+      ss <- ss[c(1:4)] %>%
+        dplyr::bind_cols(purrr::map_dfc(ss[-c(1:4)], as.numeric)) %>%
+        # ss %>%
+        magrittr::set_names(
+          c("taxon_name", "clean", "intermediate", "amalgamated", colnames(.)[-c(1:4)])
+        ) %>%
+        tidyr::pivot_longer(cols = -c(1:4),
+                            names_to = "depth",
+                            values_to = "count"
+        ) %>%
+        dplyr::mutate(depth = as.numeric(depth)) %>%
+        dplyr::arrange(depth, taxon_name) %>%
+        dplyr::filter(!is.na(count))
+    } else {
+      ss <- ss %>%
+        magrittr::set_names(
+          c("taxon_name", "clean", "intermediate", "amalgamated", "depth", "count")
+        ) %>%
+        # dplyr::arrange(taxon_name) %>%
+        dplyr::arrange(depth, taxon_name)
+    }
+    ss %>%
+      dplyr::mutate(site_name, #= rpd:::cln_str(site_name),
+                    .before = 1)
+  })
+
+usethis::use_data(IBERIA_new_counts_v3, overwrite = TRUE, compress = "xz")
+
 # IBERIA_pollen_counts <- "inst/extdata/iberia_pollen_records_v2.csv" %>%
 #   readr::read_csv() %>%
 #   dplyr::rename(depth = `avg_depth..cm.`,
