@@ -179,6 +179,10 @@ snapshot.default <- function(conn,
                  paste0(dabr::quote(entity_name), collapse = ", "),
                  ")",
                  quiet = quiet)
+  if (nrow(entity_tb) == 0) {
+    message("No records were found!")
+    return(NULL)
+  }
   return(.snapshot_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
 }
 
