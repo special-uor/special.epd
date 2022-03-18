@@ -3628,7 +3628,7 @@ waldo::compare(iberia_extra_repatriated_am_info_5 %>%
                  .[order(colnames(.))],
                tolerance = 1E-9)
 
-#### (HERE) COUNTS ----
+#### COUNTS ----
 special.epd::snapshot(conn,
                       entity_name = iberia_extra_repatriation_dates$entity_name)
 data("IBERIA_extra_counts_v3")
@@ -3658,22 +3658,21 @@ dabr::select(conn,
   dplyr::left_join(dabr::select_all(conn, "entity")) %>%
   dplyr::select(1:10)
 
-# NOTE: there are some entities with hiatus, so the samples were not included
+# NOTE: there are some entities with hiatuses, so the samples were not included
 ## in the database
 iberia_extra_repatriated_counts_not_used <- iberia_extra_repatriated_counts %>%
   dplyr::filter(is.na(ID_SAMPLE),
-                entity_name %in% c("PERAFITA",
+                entity_name %in% c("Navamuno_S3",
+                                   "PERAFITA",
                                    "PozoN_2015 core"))
+iberia_extra_repatriated_counts_not_used %>%
+  dplyr::distinct(ID_ENTITY, depth_rnd, .keep_all = TRUE)
 iberia_extra_repatriated_counts_2 <- iberia_extra_repatriated_counts %>%
-  dplyr::filter(!is.na(ID_SAMPLE))
+  dplyr::filter(!is.na(ID_SAMPLE)) %>%
+  dplyr::filter(entity_name %>% stringr::str_detect("LdlMo", negate = TRUE))
 iberia_extra_repatriated_counts_2 %>%
   dplyr::filter(is.na(ID_ENTITY) | is.na(ID_SAMPLE)) %>%
   dplyr::distinct(ID_ENTITY, depth_rnd, .keep_all = TRUE)
-  # .$ID_ENTITY %>% unique
-waldo::compare(IBERIA_extra_counts_v3 %>%
-                 dplyr::arrange(ID_ENTITY, depth),
-               iberia_extra_repatriated_counts %>%
-                 dplyr::arrange(ID_ENTITY, depth.x))
 
 aux <- conn %>%
   special.epd::snapshot(ID_ENTITY = iberia_extra_repatriated_counts$ID_ENTITY)
@@ -3682,13 +3681,28 @@ aux$sample$ID_ENTITY %>% unique() %>% length()
 aux$age_model$ID_SAMPLE %>% unique() %>% length()
 iberia_extra_repatriated_counts$ID_SAMPLE %>% unique() %>% length()
 tibble::tibble(
-  ID_SAMPLE = iberia_extra_repatriated_counts$ID_SAMPLE %>% unique(),
+  ID_SAMPLE = iberia_extra_repatriated_counts_2$ID_SAMPLE %>% unique(),
 ) %>%
   dplyr::anti_join(
     tibble::tibble(
       ID_SAMPLE = aux$sample$ID_SAMPLE %>% unique()
     )
   )
+
+# Samples that don't have pollen counts
+aux$sample %>%
+  dplyr::select(ID_ENTITY, ID_SAMPLE, depth) %>%
+  dplyr::anti_join(
+    tibble::tibble(
+      ID_SAMPLE = iberia_extra_repatriated_counts_2$ID_SAMPLE %>% unique(),
+    )
+  ) %>%
+  dplyr::left_join(
+    iberia_extra_repatriated_counts %>%
+      dplyr::select(ID_ENTITY, site_name, entity_name) %>%
+      dplyr::distinct(ID_ENTITY, .keep_all = TRUE)
+  )
+
 
 # special.epd::snapshot(ID_ENTITY = epd_repatriated_samples_2$ID_ENTITY)
 existing_pollen_counts <-
@@ -3702,11 +3716,11 @@ existing_pollen_counts %>%
   dplyr::filter(n != 3) # Verify if sample does not have the 3 tables
 
 taxon_name_tb <- dabr::select_all(conn, "taxon_name")
-# Check if all the EMBSeCBIO taxons are in the `taxon_name` table
+# Check if all the IBERIA extra taxons are in the `taxon_name` table
 new_taxon_names <-
-  c(embsecbio_taxa_amalgamation$clean_name,
-    embsecbio_taxa_amalgamation$intermediate,
-    embsecbio_taxa_amalgamation$amalgamated) %>%
+  c(iberia_extra_repatriated_counts_2$clean,
+    iberia_extra_repatriated_counts_2$intermediate,
+    iberia_extra_repatriated_counts_2$amalgamated) %>%
   unique() %>%
   sort() %>%
   tibble::tibble() %>%
@@ -3714,25 +3728,19 @@ new_taxon_names <-
   dplyr::left_join(taxon_name_tb) %>%
   dplyr::filter(is.na(ID_TAXON))
 new_taxon_names %>%
-  rpd:::add_records(conn = conn, table = "taxon_name", dry_run = TRUE)
+  rpd:::add_records(conn = conn, table = "taxon_name", dry_run = !TRUE)
+# Results: 61 records were inserted.
 
-# Remove taxons not in the `embsecbio_taxa_amalgamation` table
-iberia_extra_repatriated_counts_excluded <- iberia_extra_repatriated_counts %>%
-  dplyr::filter(!(taxon_clean %in% embsecbio_taxa_amalgamation$taxon_name))
-iberia_extra_repatriated_counts_2 <- iberia_extra_repatriated_counts %>%
-  dplyr::filter(taxon_clean %in% embsecbio_taxa_amalgamation$taxon_name)
 ##### Clean ----
 iberia_extra_repatriated_counts_3 <-
-  sort(unique(iberia_extra_repatriated_counts$ID_SAMPLE)) %>%
+  sort(unique(iberia_extra_repatriated_counts_2$ID_SAMPLE)) %>%
   purrr::map_df(function(i) {
     iberia_extra_repatriated_counts_2 %>%
       dplyr::filter(ID_SAMPLE == i) %>%
-      dplyr::select(ID_SAMPLE, taxon_name = taxon_clean, count = taxon_count) %>%
+      dplyr::select(ID_SAMPLE, taxon_name = clean, count) %>%
       dplyr::filter(!is.na(count)) %>%
-      dplyr::left_join(embsecbio_taxa_amalgamation,
-                       by = "taxon_name") %>%
       dplyr::left_join(taxon_name_tb,
-                       by = c("clean_name" = "taxon_name")) %>%
+                       by = c("taxon_name")) %>%
       dplyr::group_by(ID_SAMPLE, ID_TAXON) %>%
       dplyr::mutate(count = sum(count, na.rm = TRUE),
                     n = length(count)) %>%
@@ -3757,47 +3765,42 @@ meta_neo_res <-
               ~ {
                 pb$tick()
                 iberia_extra_repatriated_counts_3[.x:.y, ] %>%
-                  rpd:::add_records(conn = conn, table = "pollen_count", dry_run = TRUE, quiet = TRUE)
+                  rpd:::add_records(conn = conn,
+                                    table = "pollen_count",
+                                    dry_run = TRUE, quiet = TRUE)
               })
 
 meta_neo_res %>% purrr::flatten_lgl() %>% sum()
 
 ###### Validate -----
-EPD_TAXA <- dabr::select_all(conn, "pollen_count") %>%
-  dplyr::filter(ID_SAMPLE %in% iberia_extra_repatriated_counts_3$ID_SAMPLE,
-                amalgamation_level == 0)
+EPD_TAXA <- conn %>%
+  dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
+               paste0(iberia_extra_repatriated_counts_3$ID_SAMPLE, collapse = ", "),
+               ") and amalgamation_level = 0")
 waldo::compare(iberia_extra_repatriated_counts_3 %>%
                  .[order(colnames(.))],
                EPD_TAXA %>%
                  .[order(colnames(.))],
                tolerance = 1e-9)
-# 9822
-##### Intermediate ----
-embsecbio_taxa_amalgamation_stage2 <- embsecbio_taxa_amalgamation %>%
-  dplyr::select(-taxon_name) %>%
-  dplyr::distinct(clean_name, intermediate, .keep_all = TRUE) %>%
-  dplyr::filter(!is.na(intermediate))
+# 149520
 
+##### Intermediate ----
 iberia_extra_repatriated_counts_4 <-
-  sort(unique(iberia_extra_repatriated_counts_3$ID_SAMPLE)) %>%
+  sort(unique(iberia_extra_repatriated_counts_2$ID_SAMPLE)) %>%
   purrr::map_df(function(i) {
-    iberia_extra_repatriated_counts_3 %>%
+    iberia_extra_repatriated_counts_2 %>%
       dplyr::filter(ID_SAMPLE == i) %>%
+      dplyr::select(ID_SAMPLE, taxon_name = intermediate, count) %>%
+      dplyr::filter(!is.na(count)) %>%
       dplyr::left_join(taxon_name_tb,
-                       by = "ID_TAXON") %>%
-      dplyr::left_join(embsecbio_taxa_amalgamation_stage2,
-                       by = c("taxon_name" = "clean_name")) %>%
-      dplyr::mutate(amalgamation_level = 1) %>%
-      dplyr::select(-ID_TAXON, -dplyr::starts_with("action")) %>%
-      dplyr::rename(clean_taxon_name = taxon_name,
-                    taxon_name = intermediate) %>%
-      dplyr::left_join(taxon_name_tb,
-                       by = "taxon_name") %>%
+                       by = c("taxon_name")) %>%
       dplyr::group_by(ID_SAMPLE, ID_TAXON) %>%
-      dplyr::mutate(count = sum(count, na.rm = TRUE)) %>%
+      dplyr::mutate(count = sum(count, na.rm = TRUE),
+                    n = length(count)) %>%
       dplyr::distinct(ID_SAMPLE, ID_TAXON, .keep_all = TRUE) %>%
+      dplyr::select(ID_SAMPLE, ID_TAXON, count) %>%
       dplyr::ungroup() %>%
-      dplyr::select(ID_SAMPLE, ID_TAXON, amalgamation_level, count)
+      dplyr::mutate(amalgamation_level = 1, .before = count)
   }) %>%
   dplyr::arrange(ID_SAMPLE, ID_TAXON)
 
@@ -3814,48 +3817,42 @@ meta_neo_res <-
               ~ {
                 pb$tick()
                 iberia_extra_repatriated_counts_4[.x:.y, ] %>%
-                  rpd:::add_records(conn = conn, table = "pollen_count", dry_run = TRUE, quiet = TRUE)
+                  rpd:::add_records(conn = conn,
+                                    table = "pollen_count",
+                                    dry_run = TRUE, quiet = TRUE)
               })
 
 meta_neo_res %>% purrr::flatten_lgl() %>% sum()
 
 ###### Validate -----
-EPD_TAXA <- dabr::select_all(conn, "pollen_count") %>%
-  dplyr::filter(ID_SAMPLE %in% iberia_extra_repatriated_counts_4$ID_SAMPLE,
-                amalgamation_level == 1)
+EPD_TAXA <- conn %>%
+  dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
+               paste0(iberia_extra_repatriated_counts_4$ID_SAMPLE, collapse = ", "),
+               ") and amalgamation_level = 1")
 waldo::compare(iberia_extra_repatriated_counts_4 %>%
                  .[order(colnames(.))],
                EPD_TAXA %>%
                  .[order(colnames(.))],
                tolerance = 1e-9)
-# 9688
+# 145129
 
 ##### Amalgamated ----
-embsecbio_taxa_amalgamation_stage3 <- embsecbio_taxa_amalgamation_stage2 %>%
-  dplyr::select(-clean_name, -dplyr::starts_with("action")) %>%
-  dplyr::distinct(intermediate, amalgamated, .keep_all = TRUE) %>%
-  dplyr::filter(!is.na(amalgamated))
-
 iberia_extra_repatriated_counts_5 <-
-  unique(iberia_extra_repatriated_counts_4$ID_SAMPLE) %>%
-  purrr::map_df(function(ID_SAMPLE) {
-    iberia_extra_repatriated_counts_4 %>%
-      dplyr::filter(ID_SAMPLE == !!ID_SAMPLE) %>%
+  unique(iberia_extra_repatriated_counts_2$ID_SAMPLE) %>%
+  purrr::map_df(function(i) {
+    iberia_extra_repatriated_counts_2 %>%
+      dplyr::filter(ID_SAMPLE == i) %>%
+      dplyr::select(ID_SAMPLE, taxon_name = amalgamated, count) %>%
+      dplyr::filter(!is.na(count)) %>%
       dplyr::left_join(taxon_name_tb,
-                       by = "ID_TAXON") %>%
-      dplyr::left_join(embsecbio_taxa_amalgamation_stage3,
-                       by = c("taxon_name" = "intermediate")) %>%
-      dplyr::mutate(amalgamation_level = 2) %>%
-      dplyr::select(-ID_TAXON) %>%
-      dplyr::rename(intermediate_taxon_name = taxon_name,
-                    taxon_name = amalgamated) %>%
-      dplyr::left_join(taxon_name_tb,
-                       by = "taxon_name") %>%
+                       by = c("taxon_name")) %>%
       dplyr::group_by(ID_SAMPLE, ID_TAXON) %>%
-      dplyr::mutate(count = sum(count, na.rm = TRUE)) %>%
+      dplyr::mutate(count = sum(count, na.rm = TRUE),
+                    n = length(count)) %>%
       dplyr::distinct(ID_SAMPLE, ID_TAXON, .keep_all = TRUE) %>%
+      dplyr::select(ID_SAMPLE, ID_TAXON, count) %>%
       dplyr::ungroup() %>%
-      dplyr::select(ID_SAMPLE, ID_TAXON, amalgamation_level, count)
+      dplyr::mutate(amalgamation_level = 2, .before = count)
   }) %>%
   dplyr::arrange(ID_SAMPLE, ID_TAXON)
 
@@ -3872,25 +3869,323 @@ meta_neo_res <-
               ~ {
                 pb$tick()
                 iberia_extra_repatriated_counts_5[.x:.y, ] %>%
-                  rpd:::add_records(conn = conn, table = "pollen_count", dry_run = TRUE, quiet = TRUE)
+                  rpd:::add_records(conn = conn,
+                                    table = "pollen_count",
+                                    dry_run = !TRUE, quiet = TRUE)
               })
 meta_neo_res %>% purrr::flatten_lgl() %>% sum()
 ###### Validate -----
-EPD_TAXA <- dabr::select_all(conn, "pollen_count") %>%
-  dplyr::filter(ID_SAMPLE %in% iberia_extra_repatriated_counts_5$ID_SAMPLE,
-                amalgamation_level == 2)
+EPD_TAXA <- conn %>%
+  dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
+               paste0(iberia_extra_repatriated_counts_5$ID_SAMPLE, collapse = ", "),
+               ") and amalgamation_level = 2")
 waldo::compare(iberia_extra_repatriated_counts_5 %>%
                  .[order(colnames(.))],
                EPD_TAXA %>%
                  .[order(colnames(.))],
-               tolerance = 1e-9)
-# 9312
+               tolerance = 1E-9)
+# 126646
 
-iberia_extra_repatriated_counts %>%
+iberia_extra_repatriated_counts_2 %>%
   dplyr::distinct(entity_name, .keep_all = TRUE)
 
+##### (HERE) Laguna de la Mosca ----
+# The counts for this entity are still pending.
 
 
+# New sites ----
+# This sites were provided directly by the authors.
+## Entities ----
+new_entities <- "~/Downloads/iberian_extra_sites/iberia_extra_new_sites.xlsx" %>%
+  readxl::read_excel(sheet = 1) %>%
+  janitor::clean_names() %>%
+  dplyr::mutate(ID_SITE = 1492 + seq_along(site_name), # get_id_site(conn)
+                ID_ENTITY = 1666 + seq_along(entity_name), # get_id_entity(conn)
+                .before = 1)
+# Check if the new entities exist in the DB
+dabr::select(conn,
+             "SELECT * FROM entity WHERE ID_ENTITY IN (",
+             paste0(new_entities$ID_ENTITY, collapse = ", "),
+             ")")
+conn %>%
+  rpd:::add_records(table = "entity", data = new_entities, dry_run = TRUE)
+# Results: 3 records were inserted.
+### Validate ----
+EPD_NEO_DB <- dabr::select(conn,
+                           "SELECT * FROM entity WHERE ID_ENTITY IN (",
+                           paste0(new_entities$ID_ENTITY, collapse = ", "),
+                           ")")
+waldo::compare(new_entities,
+               EPD_NEO_DB,
+               tolerance = 1E-9)
+
+## Dates ----
+new_entities_dates <- "~/Downloads/iberian_extra_sites/iberia_extra_new_sites.xlsx" %>%
+  readxl::read_excel(sheet = 2) %>%
+  janitor::clean_names() %>%
+  dplyr::left_join(new_entities %>%
+                     dplyr::select(1:4),
+                   by = c("site_name", "entity_name")) %>%
+  dplyr::mutate(ID_DATE_INFO = 10888 + seq_along(entity_name)) %>% # get_id_date_info(conn)
+  dplyr::relocate(ID_SITE, ID_ENTITY, ID_DATE_INFO, .before = 1) %>%
+  dplyr::select(-ID_SITE, -site_name, -entity_name)
+# Check if the new dates exist in the DB
+dabr::select(conn,
+             "SELECT * FROM date_info WHERE ID_DATE_INFO IN (",
+             paste0(new_entities_dates$ID_DATE_INFO, collapse = ", "),
+             ")")
+conn %>%
+  rpd:::add_records(table = "date_info",
+                    data = new_entities_dates,
+                    dry_run = TRUE)
+# Results: 18 records were inserted.
+### Validate ----
+EPD_NEO_DB <- dabr::select(conn,
+                           "SELECT * FROM date_info WHERE ID_DATE_INFO IN (",
+                           paste0(new_entities_dates$ID_DATE_INFO, collapse = ", "),
+                           ")")
+waldo::compare(new_entities_dates,
+               EPD_NEO_DB,
+               tolerance = 1E-9)
+
+## Samples ----
+new_entities_samples <- "~/Downloads/iberian_extra_sites/iberia_extra_new_sites.xlsx" %>%
+  readxl::read_excel(sheet = 3) %>%
+  janitor::clean_names() %>%
+  dplyr::left_join(new_entities %>%
+                     dplyr::select(1:4),
+                   by = c("site_name", "entity_name")) %>%
+  dplyr::mutate(ID_SAMPLE = 102608 + seq_along(entity_name)) %>% # get_id_sample(conn)
+  dplyr::relocate(ID_SITE, ID_ENTITY, ID_SAMPLE, .before = 1) %>%
+  dplyr::select(-ID_SITE, -site_name, -entity_name)
+# Check if the new samples exist in the DB
+dabr::select(conn,
+             "SELECT * FROM sample WHERE ID_SAMPLE IN (",
+             paste0(new_entities_samples$ID_SAMPLE, collapse = ", "),
+             ")")
+conn %>%
+  rpd:::add_records(table = "sample",
+                    data = new_entities_samples,
+                    dry_run = TRUE)
+# Results: 127 records were inserted.
+### Validate ----
+EPD_NEO_DB <- dabr::select(conn,
+                           "SELECT * FROM sample WHERE ID_SAMPLE IN (",
+                           paste0(new_entities_samples$ID_SAMPLE, collapse = ", "),
+                           ")")
+waldo::compare(new_entities_samples,
+               EPD_NEO_DB,
+               tolerance = 1E-9)
+
+## Age models ----
+new_entities_am <-
+  find_age_models("~/Downloads/special_epd_am/",
+                  entity_name = new_entities$entity_name)
+
+# Check if the age models already exist in the DB
+special.epd::snapshot(conn, entity_name = new_entities_am$entity_name)
+
+new_entities_am2 <- new_entities_am %>%
+  purrr::pmap_df(upload_age_model, conn = conn)
+# Check if all the age models were uploaded
+all(new_entities_am2$status)
+new_entities_am2
+new_entities_am3 <-
+  new_entities_am2$am %>%
+  purrr::map_df(~.x) %>%
+  magrittr::set_names(colnames(.) %>% stringr::str_to_upper())
+
+EPD_AM <- dabr::select(conn,
+                       "SELECT * FROM age_model WHERE ID_SAMPLE IN (",
+                       paste0(new_entities_am3$ID_SAMPLE, collapse = ", "),
+                       ") AND ID_MODEL = 8")
+waldo::compare(new_entities_am3 %>%
+                 dplyr::arrange(ID_SAMPLE),
+               EPD_AM %>%
+                 magrittr::set_names(colnames(.) %>% stringr::str_to_upper()) %>%
+                 dplyr::arrange(ID_SAMPLE))
+
+## Counts ----
+# data("IBERIA_new_counts_v3")
+IBERIA_new_counts_v3_2 <- IBERIA_new_counts_v3 %>%
+  dplyr::left_join(new_entities %>%
+                     dplyr::select(1:3),
+                   by = c("site_name")) %>%
+  dplyr::relocate(ID_SITE, ID_ENTITY, .before = 1) %>%
+  dplyr::select(-ID_SITE, -site_name)
+new_entities_counts <- new_entities_samples %>%
+  dplyr::select(ID_ENTITY, ID_SAMPLE, depth) %>%
+  dplyr::mutate(depth_rnd = round(depth, 3)) %>%
+  dplyr::right_join(IBERIA_new_counts_v3_2 %>%
+                      dplyr::mutate(depth_rnd = round(depth, 3)),
+                    by = c("ID_ENTITY", "depth_rnd")) %>%
+  dplyr::select(-dplyr::starts_with("depth"))
+new_entities_counts %>%
+  dplyr::filter(is.na(ID_ENTITY) | is.na(ID_SAMPLE))
+
+taxon_name_tb <- dabr::select_all(conn, "taxon_name")
+# Check if all the NEW taxons are in the `taxon_name` table
+new_taxon_names <-
+  c(new_entities_counts$clean,
+    new_entities_counts$intermediate,
+    new_entities_counts$amalgamated) %>%
+  unique() %>%
+  sort() %>%
+  tibble::tibble() %>%
+  magrittr::set_names("taxon_name") %>%
+  dplyr::left_join(taxon_name_tb) %>%
+  dplyr::filter(is.na(ID_TAXON))
+new_taxon_names %>%
+  rpd:::add_records(conn = conn, table = "taxon_name", dry_run = TRUE)
+# Results: 6 records were inserted.
+
+##### Clean ----
+new_entities_counts_3 <-
+  sort(unique(new_entities_counts$ID_SAMPLE)) %>%
+  purrr::map_df(function(i) {
+    new_entities_counts %>%
+      dplyr::filter(ID_SAMPLE == i) %>%
+      dplyr::select(ID_SAMPLE, taxon_name = clean, count) %>%
+      dplyr::filter(!is.na(count)) %>%
+      dplyr::left_join(taxon_name_tb,
+                       by = c("taxon_name")) %>%
+      dplyr::group_by(ID_SAMPLE, ID_TAXON) %>%
+      dplyr::mutate(count = sum(count, na.rm = TRUE),
+                    n = length(count)) %>%
+      dplyr::distinct(ID_SAMPLE, ID_TAXON, .keep_all = TRUE) %>%
+      dplyr::select(ID_SAMPLE, ID_TAXON, count) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(amalgamation_level = 0, .before = count) # Clean names only
+  }) %>%
+  dplyr::arrange(ID_SAMPLE, ID_TAXON)
+
+new_entities_counts_3 %>%
+  dplyr::filter(is.na(ID_TAXON))
+dim(new_entities_counts_3)
+new_entities_counts_3 %>%
+  dplyr::filter(is.na(ID_TAXON)) %>% .$count %>% sum()
+
+idx <- idx_pairs(nrow(new_entities_counts_3), 2000)
+pb <- progress::progress_bar$new(total = nrow(idx))
+meta_neo_res <-
+  purrr::map2(idx$x,
+              idx$y,
+              ~ {
+                pb$tick()
+                new_entities_counts_3[.x:.y, ] %>%
+                  rpd:::add_records(conn = conn, table = "pollen_count", dry_run = !TRUE, quiet = TRUE)
+              })
+
+meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+
+###### Validate -----
+EPD_TAXA <- conn %>%
+  dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
+               paste0(new_entities_counts_3$ID_SAMPLE, collapse = ", "),
+               ") and amalgamation_level = 0")
+waldo::compare(new_entities_counts_3 %>%
+                 .[order(colnames(.))],
+               EPD_TAXA %>%
+                 .[order(colnames(.))],
+               tolerance = 1E-9)
+# 7740
+##### Intermediate ----
+new_entities_counts_4 <-
+  sort(unique(new_entities_counts$ID_SAMPLE)) %>%
+  purrr::map_df(function(i) {
+    new_entities_counts %>%
+      dplyr::filter(ID_SAMPLE == i) %>%
+      dplyr::select(ID_SAMPLE, taxon_name = intermediate, count) %>%
+      dplyr::filter(!is.na(count)) %>%
+      dplyr::left_join(taxon_name_tb,
+                       by = c("taxon_name")) %>%
+      dplyr::group_by(ID_SAMPLE, ID_TAXON) %>%
+      dplyr::mutate(count = sum(count, na.rm = TRUE),
+                    n = length(count)) %>%
+      dplyr::distinct(ID_SAMPLE, ID_TAXON, .keep_all = TRUE) %>%
+      dplyr::select(ID_SAMPLE, ID_TAXON, count) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(amalgamation_level = 1, .before = count)
+  }) %>%
+  dplyr::arrange(ID_SAMPLE, ID_TAXON)
+
+new_entities_counts_4 %>%
+  dplyr::filter(is.na(ID_TAXON))
+
+new_entities_counts_4 %>%
+  dplyr::filter(is.na(ID_TAXON)) %>% .$count %>% sum()
+idx_stage2 <- idx_pairs(nrow(new_entities_counts_4), 2000)
+pb <- progress::progress_bar$new(total = nrow(idx_stage2))
+meta_neo_res <-
+  purrr::map2(idx_stage2$x,
+              idx_stage2$y,
+              ~ {
+                pb$tick()
+                new_entities_counts_4[.x:.y, ] %>%
+                  rpd:::add_records(conn = conn, table = "pollen_count", dry_run = TRUE, quiet = TRUE)
+              })
+
+meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+
+###### Validate -----
+EPD_TAXA <- conn %>%
+  dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
+               paste0(new_entities_counts_4$ID_SAMPLE, collapse = ", "),
+               ") and amalgamation_level = 1")
+waldo::compare(new_entities_counts_4 %>%
+                 .[order(colnames(.))],
+               EPD_TAXA %>%
+                 .[order(colnames(.))],
+               tolerance = 1E-9)
+# 7389
+
+##### Amalgamated ----
+new_entities_counts_5 <-
+  unique(new_entities_counts$ID_SAMPLE) %>%
+  purrr::map_df(function(i) {
+    new_entities_counts %>%
+      dplyr::filter(ID_SAMPLE == i) %>%
+      dplyr::select(ID_SAMPLE, taxon_name = amalgamated, count) %>%
+      dplyr::filter(!is.na(count)) %>%
+      dplyr::left_join(taxon_name_tb,
+                       by = c("taxon_name")) %>%
+      dplyr::group_by(ID_SAMPLE, ID_TAXON) %>%
+      dplyr::mutate(count = sum(count, na.rm = TRUE),
+                    n = length(count)) %>%
+      dplyr::distinct(ID_SAMPLE, ID_TAXON, .keep_all = TRUE) %>%
+      dplyr::select(ID_SAMPLE, ID_TAXON, count) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(amalgamation_level = 2, .before = count)
+  }) %>%
+  dplyr::arrange(ID_SAMPLE, ID_TAXON)
+
+new_entities_counts_5 %>%
+  dplyr::filter(is.na(ID_TAXON)|is.na(count))
+
+new_entities_counts_5 %>%
+  dplyr::filter(is.na(ID_TAXON)) %>% .$count %>% sum()
+idx_stage3 <- idx_pairs(nrow(new_entities_counts_5), 2000)
+pb <- progress::progress_bar$new(total = nrow(idx_stage3))
+meta_neo_res <-
+  purrr::map2(idx_stage3$x,
+              idx_stage3$y,
+              ~ {
+                pb$tick()
+                new_entities_counts_5[.x:.y, ] %>%
+                  rpd:::add_records(conn = conn, table = "pollen_count", dry_run = !TRUE, quiet = TRUE)
+              })
+meta_neo_res %>% purrr::flatten_lgl() %>% sum()
+###### Validate -----
+EPD_TAXA <- conn %>%
+  dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
+               paste0(new_entities_counts_5$ID_SAMPLE, collapse = ", "),
+               ") and amalgamation_level = 2")
+waldo::compare(new_entities_counts_5 %>%
+                 .[order(colnames(.))],
+               EPD_TAXA %>%
+                 .[order(colnames(.))],
+               tolerance = 1e-9)
+# 6291
 
 
 
