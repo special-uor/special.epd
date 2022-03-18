@@ -3,18 +3,21 @@
 #' Create a snapshot of the data linked to entities. Including metadata,
 #' dates, samples, age models and pollen counts.
 #'
-#' @param conn DB connection object. If none (or invalid connection object) is
-#'     passed, then defaults to use the latest version of the data, included
-#'     in this package.
+#' @param x This object accepts different classes. If the given object is
+#'     a database connection, then extracts data from the database using the
+#'     `ID_SITE`, `ID_ENTITY` or `entity_name` (these should be provided after
+#'     the connection object). Alternatively, if the given object is a vector,
+#'     then it will retrieve the records from an internal snapshot of the
+#'     database, included in this package.
 #' @param ... Optional parameters.
 #'
 #' @rdname snapshot
 #' @export
-snapshot <- function(conn, ...) {
-  UseMethod("snapshot", conn)
+snapshot <- function(x, ...) {
+  UseMethod("snapshot", x)
 }
 
-# @param conn DB connection object.
+# @param x DB connection object.
 #' @param ID_SITE Optional, if `ID_ENTITY` or `entity_name` are provided.
 #' @param ID_ENTITY Optional, if `ID_SITE` or `entity_name` are provided.
 #' @param entity_name Optional, if `ID_SITE` or `ID_ENTITY` are provided.
@@ -23,17 +26,17 @@ snapshot <- function(conn, ...) {
 #' @rdname snapshot
 #' @return List with the individual tables.
 #' @export
-snapshot.MariaDBConnection <- function(conn,
+snapshot.MariaDBConnection <- function(x,
                                        ID_SITE,
                                        ID_ENTITY,
                                        entity_name,
                                        quiet = TRUE) {
   if (!missing(ID_SITE)) {
-    .snapshot_by_site(conn, ID_SITE, quiet = quiet)
+    .snapshot_by_site(x, ID_SITE, quiet = quiet)
   } else if (!missing(ID_ENTITY)) {
-    .snapshot_by_entity(conn, ID_ENTITY, quiet = quiet)
+    .snapshot_by_entity(x, ID_ENTITY, quiet = quiet)
   } else if (!missing(entity_name)) {
-    .snapshot_by_entity_name(conn, entity_name, quiet = quiet)
+    .snapshot_by_entity_name(x, entity_name, quiet = quiet)
   } else {
     message("At least one of the following is required:\n",
             "- ID_SITE\n- ID_ENTITY\n- entity_name\n")
@@ -41,9 +44,37 @@ snapshot.MariaDBConnection <- function(conn,
 }
 
 #' @rdname snapshot
-#' @return List with the individual tables.
 #' @export
-snapshot.default <- function(conn,
+snapshot.character <- function(x, ...) {
+  message("Calling character snapshot...")
+}
+
+snapshot.numeric <- function(x, ...) {
+  message("Calling numeric snapshot...")
+}
+
+#' @rdname snapshot
+#' @export
+snapshot.tbl_df <- function(x, ...) {
+  NextMethod("snapshot")
+}
+
+#' @rdname snapshot
+#' @export
+snapshot.tbl <- function(x, ...) {
+  NextMethod("snapshot")
+}
+
+#' @rdname snapshot
+#' @export
+snapshot.data.frame <- function(x, ...) {
+  message("Calling data.frame snapshot...")
+}
+
+
+#' @rdname snapshot
+#' @export
+snapshot.default <- function(x,
                              ID_SITE,
                              ID_ENTITY,
                              entity_name) {
@@ -51,18 +82,18 @@ snapshot.default <- function(conn,
 }
 
 #' @keywords internal
-.snapshot_by_site <- function(conn, ID_SITE, quiet = TRUE) {
-  entity_tb <- conn %>%
+.snapshot_by_site <- function(x, ID_SITE, quiet = TRUE) {
+  entity_tb <- x %>%
     dabr::select("SELECT ID_ENTITY FROM entity WHERE ID_SITE IN (",
                  paste0(ID_SITE, collapse = ", "),
                  ")",
                  quiet = quiet)
-  return(.snapshot_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
+  return(.snapshot_by_entity(x, entity_tb$ID_ENTITY, quiet = quiet))
 }
 
 #' @keywords internal
-.snapshot_by_entity <- function(conn, ID_ENTITY, quiet = TRUE) {
-  entity_tb <- conn %>%
+.snapshot_by_entity <- function(x, ID_ENTITY, quiet = TRUE) {
+  entity_tb <- x %>%
     dabr::select("SELECT * FROM entity WHERE ID_ENTITY IN (",
                  paste0(ID_ENTITY, collapse = ", "),
                  ")",
@@ -71,20 +102,20 @@ snapshot.default <- function(conn,
     message("No records were found!")
     return(NULL)
   }
-  date_info_tb <- conn %>%
+  date_info_tb <- x %>%
     dabr::select("SELECT * FROM date_info WHERE ID_ENTITY IN (",
                  paste0(ID_ENTITY, collapse = ", "),
                  ")",
                  quiet = quiet)
-  sample_tb <- conn %>%
+  sample_tb <- x %>%
     dabr::select("SELECT * FROM sample WHERE ID_ENTITY IN (",
                  paste0(ID_ENTITY, collapse = ", "),
                  ")",
                  quiet = quiet)
   if (nrow(sample_tb) > 0) {
     tryCatch({
-      model_name_tb <- dabr::select_all(conn, "model_name", quiet = TRUE)
-      age_model_tb <- conn %>%
+      model_name_tb <- dabr::select_all(x, "model_name", quiet = TRUE)
+      age_model_tb <- x %>%
         dabr::select("SELECT * FROM age_model WHERE ID_SAMPLE IN (",
                      paste0(sample_tb$ID_SAMPLE, collapse = ", "),
                      ")",
@@ -94,8 +125,8 @@ snapshot.default <- function(conn,
       age_model_tb <- NULL
     })
     tryCatch({
-      taxon_name_tb <- dabr::select_all(conn, "taxon_name", quiet = TRUE)
-      pollen_count_tb <- conn %>%
+      taxon_name_tb <- dabr::select_all(x, "taxon_name", quiet = TRUE)
+      pollen_count_tb <- x %>%
         dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
                      paste0(sample_tb$ID_SAMPLE, collapse = ", "),
                      ")",
@@ -173,8 +204,8 @@ snapshot.default <- function(conn,
 }
 
 #' @keywords internal
-.snapshot_by_entity_name <- function(conn, entity_name, quiet = TRUE) {
-  entity_tb <- conn %>%
+.snapshot_by_entity_name <- function(x, entity_name, quiet = TRUE) {
+  entity_tb <- x %>%
     dabr::select("SELECT ID_ENTITY FROM entity WHERE entity_name IN (",
                  paste0(dabr::quote(entity_name), collapse = ", "),
                  ")",
@@ -183,38 +214,38 @@ snapshot.default <- function(conn,
     message("No records were found!")
     return(NULL)
   }
-  return(.snapshot_by_entity(conn, entity_tb$ID_ENTITY, quiet = quiet))
+  return(.snapshot_by_entity(x, entity_tb$ID_ENTITY, quiet = quiet))
 }
 
 #' Write DB snapshot to disk
 #' Write DB snapshot to disk as individual CSV files.
 #'
-#' @param x DB snapshot (object of `special.epd` class).
+#' @param .data DB snapshot (object of `special.epd` class).
 #' @param prefix String with a prefix path where the data should be stored.
 #'
 #' @return Invisibly returns the input DB snapshot.
 #' @export
-write_csvs <- function(x, prefix) {
-  if (!("special.epd" %in% class(x)))
+write_csvs <- function(.data, prefix) {
+  if (!("special.epd" %in% class(.data)))
     stop("The given object does not look like a valid snapshot from the ",
          "`SPECIAL-EPD database. Try using the function `snapshot` first.",
          call. = FALSE)
   if (!dir.exists(dirname(prefix)))
     stop("The provided directory, `", dirname(prefix), "`, does not exist.",
          call. = FALSE)
-  x$entity %>%
+  .data$entity %>%
     readr::write_excel_csv(file = paste0(prefix, "_metadata.csv"), na = "")
-  x$date_info %>%
+  .data$date_info %>%
     readr::write_excel_csv(file = paste0(prefix, "_dates.csv"), na = "")
-  x$sample %>%
+  .data$sample %>%
     readr::write_excel_csv(file = paste0(prefix, "_samples.csv"), na = "")
-  x$age_model %>%
+  .data$age_model %>%
     readr::write_excel_csv(file = paste0(prefix, "_age_model.csv"), na = "")
-  x$pollen_count$clean %>%
+  .data$pollen_count$clean %>%
     readr::write_excel_csv(file = paste0(prefix, "_pollen_counts_clean.csv"))
-  x$pollen_count$intermediate %>%
+  .data$pollen_count$intermediate %>%
     readr::write_excel_csv(file = paste0(prefix, "_pollen_counts_intermediate.csv"))
-  x$pollen_count$amalgamated %>%
+  .data$pollen_count$amalgamated %>%
     readr::write_excel_csv(file = paste0(prefix, "_pollen_counts_amalgamated.csv"))
-  return(invisible(x))
+  return(.data)
 }
