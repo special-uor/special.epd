@@ -4209,6 +4209,136 @@ aux %>%
 
 
 # EPD exclusive ----
+## (HERE) Upload age models ----
+pending_am <-
+  find_age_models("~/Downloads/special_epd_am/",
+                  entity_name = c("TELAKKO",
+                                  "BALLYNAH",
+                                  "FONTSALE",
+                                  "FOUGS942"))
+pending_am
+# Check if the age models already exist in the DB
+special.epd::snapshot(conn, entity_name = c("TELAKKO",
+                                            "BALLYNAH",
+                                            "FONTSALE"))
+
+pending_am2 <- pending_am %>%
+  purrr::pmap_df(upload_age_model, conn = conn)
+# Check if all the age models were uploaded
+all(pending_am2$status)
+pending_am2
+pending_am3 <-
+  pending_am2$am %>%
+  purrr::map_df(~.x) %>%
+  magrittr::set_names(colnames(.) %>% stringr::str_to_upper())
+
+EPD_AM <- dabr::select(conn,
+                       "SELECT * FROM age_model WHERE ID_SAMPLE IN (",
+                       paste0(pending_am3$ID_SAMPLE, collapse = ", "),
+                       ") AND ID_MODEL = 8")
+waldo::compare(pending_am3 %>%
+                 dplyr::arrange(ID_SAMPLE),
+               EPD_AM %>%
+                 magrittr::set_names(colnames(.) %>% stringr::str_to_upper()) %>%
+                 dplyr::arrange(ID_SAMPLE))
+
+## Summary ----
+epd_exclusive_repatriation <- epd_repatriation_tmp_file %>%
+  readxl::read_excel(sheet = 6) %>%
+  janitor::clean_names()
+
+epd_exclusive_repatriation_db_dump <- conn %>%
+  special.epd::snapshot(entity_name = epd_exclusive_repatriation$entity_name)
+epd_exclusive_repatriaition_entities_with_dates <-
+  epd_exclusive_repatriation_db_dump$date_info %>%
+  # dplyr::distinct(ID_ENTITY) %>%
+  dplyr::group_by(ID_ENTITY) %>%
+  dplyr::summarise(n_dates = dplyr::n()) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$entity %>%
+                     dplyr::select(1:4),
+                   by = "ID_ENTITY") %>%
+  dplyr::mutate(DATES = TRUE)
+
+epd_exclusive_repatriaition_entities_with_samples <-
+  epd_exclusive_repatriation_db_dump$sample %>%
+  # dplyr::distinct(ID_ENTITY) %>%
+  dplyr::group_by(ID_ENTITY) %>%
+  dplyr::summarise(n_samples = dplyr::n()) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$entity %>%
+                     dplyr::select(1:4),
+                   by = "ID_ENTITY") %>%
+  dplyr::mutate(SAMPLES = TRUE)
+
+epd_exclusive_repatriaition_entities_with_am <-
+  epd_exclusive_repatriation_db_dump$age_model %>%
+  dplyr::distinct(ID_SAMPLE) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$sample,
+                   by = "ID_SAMPLE") %>%
+  dplyr::group_by(ID_ENTITY) %>%
+  dplyr::summarise(n_am = dplyr::n()) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$entity %>%
+                     dplyr::select(1:4),
+                   by = "ID_ENTITY") %>%
+  dplyr::mutate(AM = TRUE)
+
+epd_exclusive_repatriaition_entities_with_counts_0 <-
+  epd_exclusive_repatriation_db_dump$pollen_count$clean %>%
+  dplyr::distinct(ID_SAMPLE) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$sample,
+                   by = "ID_SAMPLE") %>%
+  dplyr::group_by(ID_ENTITY) %>%
+  dplyr::summarise(n_counts_0 = dplyr::n()) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$entity %>%
+                     dplyr::select(1:4),
+                   by = "ID_ENTITY") %>%
+  dplyr::mutate(COUNTS_0 = TRUE)
+epd_exclusive_repatriaition_entities_with_counts_1 <-
+  epd_exclusive_repatriation_db_dump$pollen_count$intermediate %>%
+  dplyr::distinct(ID_SAMPLE) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$sample,
+                   by = "ID_SAMPLE") %>%
+  dplyr::group_by(ID_ENTITY) %>%
+  dplyr::summarise(n_counts_1 = dplyr::n()) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$entity %>%
+                     dplyr::select(1:4),
+                   by = "ID_ENTITY") %>%
+  dplyr::mutate(COUNTS_1 = TRUE)
+epd_exclusive_repatriaition_entities_with_counts_2 <-
+  epd_exclusive_repatriation_db_dump$pollen_count$amalgamated %>%
+  dplyr::distinct(ID_SAMPLE) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$sample,
+                   by = "ID_SAMPLE") %>%
+  dplyr::group_by(ID_ENTITY) %>%
+  dplyr::summarise(n_counts_2 = dplyr::n()) %>%
+  dplyr::left_join(epd_exclusive_repatriation_db_dump$entity %>%
+                     dplyr::select(1:4),
+                   by = "ID_ENTITY") %>%
+  dplyr::mutate(COUNTS_2 = TRUE)
+
+
+epd_exclusive_repatriation %>%
+  dplyr::select(-site_name) %>%
+  dplyr::left_join(epd_exclusive_repatriaition_entities_with_dates) %>%
+  dplyr::left_join(epd_exclusive_repatriaition_entities_with_samples) %>%
+  dplyr::left_join(epd_exclusive_repatriaition_entities_with_am) %>%
+  dplyr::left_join(epd_exclusive_repatriaition_entities_with_counts_0) %>%
+  dplyr::left_join(epd_exclusive_repatriaition_entities_with_counts_1) %>%
+  dplyr::left_join(epd_exclusive_repatriaition_entities_with_counts_2) %>%
+  dplyr::mutate(has_DATES = ifelse(is.na(DATES), FALSE, DATES),
+                has_SAMPLES = ifelse(is.na(SAMPLES), FALSE, SAMPLES),
+                has_AM = ifelse(is.na(AM), FALSE, AM),
+                COUNTS_0 = ifelse(is.na(COUNTS_0), FALSE, COUNTS_0),
+                COUNTS_1 = ifelse(is.na(COUNTS_1), FALSE, COUNTS_1),
+                COUNTS_2 = ifelse(is.na(COUNTS_2), FALSE, COUNTS_2),
+                has_COUNTS = COUNTS_0 & COUNTS_1 & COUNTS_2) %>%
+  dplyr::left_join(epd_age_models %>%
+                     dplyr::select(-site_id, -site_name_clean)) %>%
+  dplyr::relocate(n_dates, n_samples, n_am,
+                  .before = has_DATES) %>%
+  readr::write_excel_csv("~/Downloads/special-epd_epd-exclusive_summary.csv")
+
+
+
 external_link_tb <- dabr::select_all(conn, "external_link") %>%
   dplyr::group_by(ID_ENTITY) %>%
   dplyr::mutate(n = dplyr::n())
@@ -4254,7 +4384,7 @@ entities_from_other_dbs <- external_link_tb %>%
 #   dplyr::filter(!(ID_ENTITY %in% records_from_other_sources$ID_ENTITY)) %>%
 #   readr::write_excel_csv("~/Downloads/epd.csv", na = "")
 
-#### Dates ----
+## Dates ----
 epd_repatriated_dates_info <- EPD_DATES %>%
   dplyr::filter(entity_name %in% EPD_exclusive$external_entity_name) %>%
   dplyr::left_join(dabr::select(conn,
@@ -4300,7 +4430,7 @@ EPD_DATES_NEO_DB %>%
   dplyr::filter(ID_ENTITY %in% records_from_other_sources$ID_ENTITY)
 
 
-#### Samples ----
+##Samples ----
 epd_repatriated_samples <- EPD_COUNTS %>%
   dplyr::filter(entity_name %in% EPD_exclusive$external_entity_name) %>%
   # smpds::rm_na_taxa(1:16) %>%
@@ -4350,7 +4480,7 @@ waldo::compare(epd_repatriated_samples_2 %>%
                  dplyr::select(-count_type, -sample_type),
                tolerance = 2)
 
-#### (HERE) Age models ----
+## (HERE) Age models ----
 epd_repatriated_new_am <-
   find_age_models(path, EPD_exclusive$external_entity_name)
 # Find duplicated entries
@@ -4439,7 +4569,7 @@ tibble::tribble(
 )
 
 
-#### (HERE) Counts ----
+## (HERE) Counts ----
 # Find samples with existing pollen records
 # existing_pollen_counts <- conn %>%
 #   dabr::select("SELECT * FROM pollen_count WHERE ID_SAMPLE IN (",
