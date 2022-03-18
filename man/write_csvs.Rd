@@ -5,10 +5,10 @@
 \title{Write DB snapshot to disk
 Write DB snapshot to disk as individual CSV files.}
 \usage{
-write_csvs(x, prefix)
+write_csvs(.data, prefix)
 }
 \arguments{
-\item{x}{DB snapshot (object of \code{special.epd} class).}
+\item{.data}{DB snapshot (object of \code{special.epd} class).}
 
 \item{prefix}{String with a prefix path where the data should be stored.}
 }

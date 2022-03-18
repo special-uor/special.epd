@@ -3,19 +3,34 @@
 \name{snapshot}
 \alias{snapshot}
 \alias{snapshot.MariaDBConnection}
+\alias{snapshot.character}
+\alias{snapshot.tbl_df}
+\alias{snapshot.tbl}
+\alias{snapshot.data.frame}
 \alias{snapshot.default}
 \title{Create a snapshot of the data linked to entities}
 \usage{
-snapshot(conn, ...)
+snapshot(x, ...)
 
-\method{snapshot}{MariaDBConnection}(conn, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE)
+\method{snapshot}{MariaDBConnection}(x, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE)
 
-\method{snapshot}{default}(conn, ID_SITE, ID_ENTITY, entity_name)
+\method{snapshot}{character}(x, ...)
+
+\method{snapshot}{tbl_df}(x, ...)
+
+\method{snapshot}{tbl}(x, ...)
+
+\method{snapshot}{data.frame}(x, ...)
+
+\method{snapshot}{default}(x, ID_SITE, ID_ENTITY, entity_name)
 }
 \arguments{
-\item{conn}{DB connection object. If none (or invalid connection object) is
-passed, then defaults to use the latest version of the data, included
-in this package.}
+\item{x}{This object accepts different classes. If the given object is
+a database connection, then extracts data from the database using the
+\code{ID_SITE}, \code{ID_ENTITY} or \code{entity_name} (these should be provided after
+the connection object). Alternatively, if the given object is a vector,
+then it will retrieve the records from an internal snapshot of the
+database, included in this package.}
 
 \item{...}{Optional parameters.}
 
@@ -28,8 +43,6 @@ in this package.}
 \item{quiet}{Boolean flag to indicate if queries should be displayed.}
 }
 \value{
-List with the individual tables.
-
 List with the individual tables.
 }
 \description{

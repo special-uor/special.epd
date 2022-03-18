@@ -5,7 +5,7 @@
 \alias{entity}
 \title{\code{entity}}
 \format{
-An object of class \code{entity} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 1664 rows and 11 columns.
+An object of class \code{entity} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 1667 rows and 11 columns.
 }
 \usage{
 entity
