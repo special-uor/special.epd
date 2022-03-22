@@ -93,6 +93,10 @@ snapshot.default <- function(x,
 
 #' @keywords internal
 .snapshot_by_entity <- function(x, ID_ENTITY, quiet = TRUE) {
+  # Local bindings
+  . <- amalgamation_level <- count <- taxon_name <- NULL
+  ID_SAMPLE <- ID_SAMPLE <- ID_TAXON <- NULL
+
   entity_tb <- x %>%
     dabr::select("SELECT * FROM entity WHERE ID_ENTITY IN (",
                  paste0(ID_ENTITY, collapse = ", "),
