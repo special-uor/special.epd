@@ -236,7 +236,9 @@ format_counts <- function(.data, is_list = FALSE) {
       ) %>%
       dplyr::mutate(depth = as.numeric(depth)) %>%
       dplyr::arrange(depth, taxon_name) %>%
-      dplyr::filter(!is.na(count))
+      dplyr::mutate(count = ifelse(is.na(count), 0, count)) %>%
+      dplyr::filter(!is.na(taxon_name))
+      # dplyr::filter(!is.na(count))
   } else {
     .data <- .data %>%
       magrittr::set_names(
