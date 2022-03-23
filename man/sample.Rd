@@ -5,7 +5,7 @@
 \alias{sample}
 \title{\code{sample}}
 \format{
-An object of class \code{sample} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 102672 rows and 11 columns.
+An object of class \code{sample} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 103091 rows and 11 columns.
 }
 \usage{
 sample
