@@ -123,37 +123,130 @@ IBERIA_counts_v2 <- "inst/extdata/iberia_pollen_records_v2.csv" %>%
 IBERIA_counts_v2
 
 ## v3 ----
-IBERIA_counts_v3 <- "inst/extdata/Iberia_pollen_records_v3_0307.csv" %>%
-  readr::read_csv() %>%
-  dplyr::rename(depth = `avg_depth..cm.`,
-                IPE_age_cal = `IPE.age..cal.`) %>%
-  dplyr::select(-latitude,
-                -longitude,
-                -elevation,
-                -source,
-                -reference,
-                -dplyr::starts_with("INTCAL"),
-                -IPE_age_cal) %>%
-  dplyr::mutate(entity_name = entity_name %>%
-                  stringr::str_replace_all("Armena", "A294") %>%
-                  stringr::str_replace_all("Banyoles SB2", "SB2") %>%
-                  stringr::str_replace_all("BANYOLES_1", "BANYOLES") %>%
-                  stringr::str_replace_all("BOSSIER", "PRAILLOS") %>%
-                  stringr::str_replace_all("BSM08", "BASAMORA") %>%
-                  stringr::str_replace_all("BSN6", "BSNA") %>%
-                  stringr::str_replace_all("CANCRUZ", "CANADACR") %>%
-                  stringr::str_replace_all("CERRATO", "ESPINOSA") %>%
-                  stringr::str_replace_all("CreixellT", "CREIXELL") %>%
-                  stringr::str_replace_all("ESGRAU", "GRAU") %>%
-                  stringr::str_replace_all("ESTANILLES", "ESTANILL") %>%
-                  stringr::str_replace_all("LABRADILLOS", "LABRADIL") %>%
-                  stringr::str_replace_all("Marbore composite", "MARBORE") %>%
-                  stringr::str_replace_all("PALANQUES", "PALANQUE") %>%
-                  stringr::str_replace_all("PLAESTANY", "ESTANY") %>%
-                  stringr::str_replace_all("SBAZA", "BAZA") %>%
-                  stringr::str_replace_all("VERDEOSPESOA", "VERDEOSP") %>%
-                  stringr::str_replace_all("VILLAVERDE", "VILAVERD")
-                )
+iberia_counts_filenames <-
+  list.files(path = "~/Downloads/Iberian_other sites",
+             pattern = ".xls",
+             full.names = TRUE) %>%
+  tibble::tibble() %>%
+  magrittr::set_names("path") %>%
+  dplyr::mutate(is_list = basename(path) %>%
+                  stringr::str_detect("_list|_LIST"),
+                site_name = basename(path) %>%
+                  stringr::str_remove_all(".xlsx|.xls") %>%
+                  stringr::str_remove_all("_list|_LIST|_SPH|_sph"),
+                .before = 1)
+
+iberian_entities_without_counts <-
+  "~/Downloads/0_iberian-entities-without-counts_SPH.xlsx" %>%
+  readxl::read_excel(sheet = 1) %>%
+  janitor::clean_names()
+
+# View(iberian_entities_without_counts)
+
+iberia_counts_filenames_2 <- iberia_counts_filenames %>%
+  dplyr::left_join(iberian_entities_without_counts) %>%
+  dplyr::select(is_list, site_name, path, entity_name)
+
+format_counts <- function(.data, is_list = FALSE) {
+  if (all(is.na(.data[1])) &
+      (colnames(.data)[2] %>%
+       stringr::str_detect("...2|Name|name|NAME"))) {
+    .data <- .data[-1]
+  }
+  no_count_col <- colnames(.data) %>%
+    stringr::str_detect("Count|count|COUNT") %>%
+    any
+  if (!is_list & !no_count_col) {
+    .data <- .data[c(1:4)] %>%
+      dplyr::bind_cols(purrr::map_dfc(.data[-c(1:4)], as.numeric)) %>%
+      magrittr::set_names(
+        c("taxon_name", "clean", "intermediate", "amalgamated", colnames(.)[-c(1:4)])
+      ) %>%
+      tidyr::pivot_longer(cols = -c(1:4),
+                          names_to = "depth",
+                          values_to = "count"
+      ) %>%
+      # dplyr::mutate(depth = ifelse(is.na(depth) |
+      #                                depth == "", "-999999", depth)) %>%
+      dplyr::mutate(depth = as.numeric(depth)) %>%
+      dplyr::arrange(depth, taxon_name) %>%
+      dplyr::mutate(count = ifelse(is.na(count), 0, count)) %>%
+      dplyr::filter(!is.na(taxon_name))
+    # dplyr::filter(!is.na(count))
+  } else {
+    .data <- .data %>%
+      magrittr::set_names(
+        c("taxon_name", "clean", "intermediate", "amalgamated", "depth", "count")
+      ) %>%
+      dplyr::arrange(depth, taxon_name)
+  }
+  return(.data)
+}
+
+IBERIA_counts_v3 <- iberia_counts_filenames_2 %>%
+  purrr::pmap_df(function(is_list, site_name, path, entity_name, ...) {
+    sheets <- readxl::excel_sheets(path) %>% length()
+    message("Processing: ", site_name, " - Sheets: ", sheets)
+    ss <- seq_len(sheets) %>%
+      purrr::map(function(sheet) {
+        tryCatch({
+          suppressMessages({
+            path %>%
+              readxl::read_excel(sheet = sheet) %>%
+              format_counts(is_list = is_list)
+          })
+        }, error = function(e) {})
+      })
+    non_empty_sheets <- ss %>% purrr::map_lgl(~!is.null(.x))
+    # If multiple cores, then inspect the depths
+    if (sum(non_empty_sheets) > 1) {
+      ss %>%
+        purrr::walk(function(x) {
+          depths <- x$depth %>% unique %>% sort
+          message("\tDepths: ", paste0(round(depths, 3), collapse = ", "))
+        })
+    }
+
+    ss %>%
+      purrr::map_df(~.x) %>%
+      dplyr::mutate(site_name, #= rpd:::cln_str(site_name),
+                    entity_name,
+                    .before = 1)
+  })
+IBERIA_counts_v3 %>%
+  dplyr::filter(is.na(depth))
+
+# IBERIA_counts_v3 <- "inst/extdata/Iberia_pollen_records_v3_0307.csv" %>%
+#   readr::read_csv() %>%
+#   dplyr::rename(depth = `avg_depth..cm.`,
+#                 IPE_age_cal = `IPE.age..cal.`) %>%
+#   dplyr::select(-latitude,
+#                 -longitude,
+#                 -elevation,
+#                 -source,
+#                 -reference,
+#                 -dplyr::starts_with("INTCAL"),
+#                 -IPE_age_cal) %>%
+#   dplyr::mutate(entity_name = entity_name %>%
+#                   stringr::str_replace_all("Armena", "A294") %>%
+#                   stringr::str_replace_all("Banyoles SB2", "SB2") %>%
+#                   stringr::str_replace_all("BANYOLES_1", "BANYOLES") %>%
+#                   stringr::str_replace_all("BOSSIER", "PRAILLOS") %>%
+#                   stringr::str_replace_all("BSM08", "BASAMORA") %>%
+#                   stringr::str_replace_all("BSN6", "BSNA") %>%
+#                   stringr::str_replace_all("CANCRUZ", "CANADACR") %>%
+#                   stringr::str_replace_all("CERRATO", "ESPINOSA") %>%
+#                   stringr::str_replace_all("CreixellT", "CREIXELL") %>%
+#                   stringr::str_replace_all("ESGRAU", "GRAU") %>%
+#                   stringr::str_replace_all("ESTANILLES", "ESTANILL") %>%
+#                   stringr::str_replace_all("LABRADILLOS", "LABRADIL") %>%
+#                   stringr::str_replace_all("Marbore composite", "MARBORE") %>%
+#                   stringr::str_replace_all("PALANQUES", "PALANQUE") %>%
+#                   stringr::str_replace_all("PLAESTANY", "ESTANY") %>%
+#                   stringr::str_replace_all("SBAZA", "BAZA") %>%
+#                   stringr::str_replace_all("VERDEOSPESOA", "VERDEOSP") %>%
+#                   stringr::str_replace_all("VILLAVERDE", "VILAVERD")
+#                 )
 entity_names <- IBERIA_counts_v3$entity_name %>% unique() %>% sort()
 a <- dabr::select_all(conn, "entity") %>% .$entity_name
 entity_names[!entity_names %in% a]
@@ -168,9 +261,8 @@ IBERIA_counts_v3_2 <- conn %>%
                ")") %>%
   dplyr::select(ID_SITE, ID_ENTITY, entity_name) %>%
   dplyr::right_join(IBERIA_counts_v3,
-                    by = "entity_name") #%>%
-  # dplyr::rename(site_name = site_name.y) %>%
-  # dplyr::select(-site_name.x, -cln_site_name)
+                    by = "entity_name") %>%
+  dplyr::relocate(site_name, .before = entity_name)
 
 waldo::compare(IBERIA_counts_v3 %>%
                  dplyr::arrange(site_name, depth),
@@ -182,9 +274,9 @@ waldo::compare(IBERIA_counts_v3 %>%
 IBERIA_counts_v3_2 %>%
   dplyr::filter(is.na(ID_SITE) | is.na(ID_ENTITY))
 conn %>%
-  dabr::select("SELECT * FROM entity WHERE site_name in (",
+  dabr::select("SELECT * FROM entity WHERE entity_name in (",
                IBERIA_counts_v3_2 %>%
-                 dplyr::distinct(site_name) %>%
+                 dplyr::distinct(entity_name) %>%
                  purrr::map(dabr::quote) %>%
                  purrr::flatten_chr() %>%
                  stringr::str_c(collapse = ", "),
@@ -192,7 +284,6 @@ conn %>%
 
 IBERIA_counts_v3 <- IBERIA_counts_v3_2
 usethis::use_data(IBERIA_counts_v3, overwrite = TRUE, compress = "xz")
-
 
 # OLD ---
 ## pollen counts ---
