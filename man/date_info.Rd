@@ -5,7 +5,7 @@
 \alias{date_info}
 \title{\code{date_info}}
 \format{
-An object of class \code{date_info} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 10142 rows and 13 columns.
+An object of class \code{date_info} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 10161 rows and 13 columns.
 }
 \usage{
 date_info

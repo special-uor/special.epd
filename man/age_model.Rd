@@ -5,7 +5,7 @@
 \alias{age_model}
 \title{\code{age_model}}
 \format{
-An object of class \code{age_model} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 95430 rows and 8 columns.
+An object of class \code{age_model} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 95954 rows and 8 columns.
 }
 \usage{
 age_model

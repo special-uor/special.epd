@@ -5,7 +5,7 @@
 \alias{pollen_count}
 \title{\code{pollen_count}}
 \format{
-An object of class \code{pollen_count} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 20420740 rows and 4 columns.
+An object of class \code{pollen_count} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 21740866 rows and 4 columns.
 }
 \usage{
 pollen_count
