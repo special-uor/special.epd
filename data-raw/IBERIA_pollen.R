@@ -212,7 +212,10 @@ IBERIA_counts_v3 <- iberia_counts_filenames_2 %>%
       dplyr::mutate(site_name, #= rpd:::cln_str(site_name),
                     entity_name,
                     .before = 1)
-  })
+  }) %>%
+  dplyr::mutate(clean = clean %>% stringr::str_squish(),
+                intermediate = intermediate %>% stringr::str_squish(),
+                amalgamated = amalgamated %>% stringr::str_squish())
 IBERIA_counts_v3 %>%
   dplyr::filter(is.na(depth))
 
@@ -263,6 +266,7 @@ IBERIA_counts_v3_2 <- conn %>%
   dplyr::right_join(IBERIA_counts_v3,
                     by = "entity_name") %>%
   dplyr::relocate(site_name, .before = entity_name)
+
 
 waldo::compare(IBERIA_counts_v3 %>%
                  dplyr::arrange(site_name, depth),
