@@ -5,7 +5,7 @@
 \alias{taxon_name}
 \title{\code{taxon_name}}
 \format{
-An object of class \code{taxon_name} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 2922 rows and 2 columns.
+An object of class \code{taxon_name} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 2940 rows and 2 columns.
 }
 \usage{
 taxon_name

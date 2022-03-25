@@ -5,7 +5,7 @@
 \alias{EPD_DATES}
 \title{\code{EPD_DATES}}
 \format{
-An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 9622 rows and 16 columns.
+An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 10330 rows and 16 columns.
 }
 \usage{
 EPD_DATES

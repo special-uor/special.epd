@@ -49,6 +49,6 @@ EPD_DATES_2 <- EPD_DATES %>%
   # dplyr::mutate(n = length(entity_name)) %>%
   # dplyr::filter(n > 1)
 
-EPD_DATES_2 <- EPD_DATES
+EPD_DATES <- EPD_DATES_2
 usethis::use_data(EPD_DATES, overwrite = TRUE, compress = "xz")
 usethis::use_data(EPD_DATES_coretops, overwrite = TRUE, compress = "xz")

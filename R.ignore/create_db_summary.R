@@ -68,7 +68,13 @@ special_epd_entities_with_counts_2 <-
   dplyr::mutate(COUNTS_2 = TRUE)
 
 
-special_epd %>%
+special_epd_entities_without_am <-
+  "~/Downloads/special-epd_entities_without_age_models.xlsx" %>%
+  readxl::read_excel(sheet = 1) %>%
+  janitor::clean_names() %>%
+  dplyr::select(-c(1:7, 9:10))
+
+special_epd_summary <- special_epd %>%
   dplyr::select(-site_name) %>%
   dplyr::left_join(special_epd_entities_with_dates) %>%
   dplyr::left_join(special_epd_entities_with_samples) %>%
@@ -83,8 +89,22 @@ special_epd %>%
                 COUNTS_1 = ifelse(is.na(COUNTS_1), FALSE, COUNTS_1),
                 COUNTS_2 = ifelse(is.na(COUNTS_2), FALSE, COUNTS_2),
                 has_COUNTS = COUNTS_0 & COUNTS_1 & COUNTS_2) %>%
-  dplyr::left_join(epd_age_models %>%
-                     dplyr::select(-site_id, -site_name_clean)) %>%
-  dplyr::relocate(n_dates, n_samples, n_am,
+  dplyr::left_join(special_epd_entities_without_am) %>%
+  # dplyr::left_join(epd_age_models %>%
+  #                    dplyr::select(-site_id, -site_name_clean)) %>%
+  dplyr::mutate(n_counts = list(n_counts_0, n_counts_1, n_counts_2) %>%
+                  purrr::pmap_dbl(function(n_counts_0, n_counts_1, n_counts_2) {
+                    unique(c(n_counts_0, n_counts_1, n_counts_2))
+                  })) %>%
+  dplyr::relocate(n_dates, n_samples, n_am, n_counts,
                   .before = has_DATES) %>%
-  readr::write_excel_csv("~/Downloads/special-epd_summary.csv")
+  dplyr::relocate(site_name, .before = entity_name) %>%
+  # dplyr::filter(n_counts_0 != n_counts_1 | n_counts_1 != n_counts_2)
+  dplyr::select(-DATES, -SAMPLES, -AM, -COUNTS_0, -COUNTS_1, -COUNTS_2) %>%
+  dplyr::select(-n_counts_0, -n_counts_1, -n_counts_2)
+
+special_epd_summary %>%
+  readr::write_excel_csv(paste0("~/Downloads/special-epd_summary_",
+                                Sys.Date(),
+                                ".csv"),
+                         na = "")

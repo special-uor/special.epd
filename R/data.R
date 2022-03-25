@@ -19,12 +19,17 @@
 #' \code{EPD_taxa_to_exclude}
 "EPD_taxa_to_exclude"
 
-#' \code{IBERIA_pollen_dates}
-"IBERIA_pollen_dates"
+#' \code{IBERIA_pollen_dates_v2}
+"IBERIA_pollen_dates_v2"
 
-#' \code{IBERIA_pollen}
-"IBERIA_pollen"
+#' \code{IBERIA_pollen_dates_v3}
+"IBERIA_pollen_dates_v3"
 
+#' \code{IBERIA_pollen_v2}
+"IBERIA_pollen_v2"
+
+#' \code{IBERIA_pollen_v3}
+"IBERIA_pollen_v3"
 
 #' \code{age_model}
 "age_model"

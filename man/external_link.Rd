@@ -5,7 +5,7 @@
 \alias{external_link}
 \title{\code{external_link}}
 \format{
-An object of class \code{external_link} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 1978 rows and 7 columns.
+An object of class \code{external_link} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 1977 rows and 7 columns.
 }
 \usage{
 external_link
