@@ -10257,6 +10257,355 @@ date_info_tb %>%
 
 
 # Update dates extracted from the RPD (wrong units: depth and thickness) ----
+### Dates ----
+date_info_tb <-
+  dabr::select_all(conn, "date_info")
+
+date_info_tb_dodgy_dates <-
+  date_info_tb %>%
+  dplyr::filter(depth < 1 | thickness < 1)
+
+date_info_tb_dodgy_dates_external_links <-
+  dabr::select_all(conn, "external_link") %>%
+  dplyr::filter(ID_ENTITY %in% date_info_tb_dodgy_dates$ID_ENTITY) %>%
+  dplyr::filter(external_source != "NEOTOMA")
+
+date_info_tb_dodgy_dates_entities <-
+  dabr::select_all(conn, "entity") %>%
+  dplyr::filter(ID_ENTITY %in% date_info_tb_dodgy_dates$ID_ENTITY) %>%
+  dplyr::left_join(date_info_tb_dodgy_dates_external_links) %>%
+  dplyr::mutate(external_source =
+                  ifelse(is.na(external_source), "NEOTOMA",
+                         external_source))
+
+##### RPD ----
+date_info_tb_dodgy_dates_entities_RPD <-
+  date_info_tb_dodgy_dates_entities %>%
+  dplyr::filter(external_source == "RPD") %>%
+  .$external_ID_ENTITY %>%
+  extract_rpd()
+
+date_info_tb_dodgy_dates_entities_RPD_EPD_dates <-
+  date_info %>%
+  dplyr::filter(ID_ENTITY %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "RPD") %>%
+      .$ID_ENTITY
+  ))
+
+date_info_tb_dodgy_dates_entities_RPD_NEOTOMA_dates <-
+  EPD_DATES %>%
+  dplyr::filter(entity_name %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "RPD") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::select(-ages_already, -site_id, -site_name, -site_name_clean, -entity_name) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(age_calib = age_cal)
+
+date_info_tb_dodgy_dates_entities_RPD_dates <-
+  date_info_tb_dodgy_dates_entities_RPD$date_info %>%
+  dplyr::select(-ID_DATE_INFO) %>%
+  dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+  dplyr::left_join(external_links_rpd %>%
+                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+  dplyr::select(-external_ID_ENTITY) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(lab_num = lab_number)
+
+waldo::compare(date_info_tb_dodgy_dates_entities_RPD_dates %>%
+                 .[order(colnames(.))],
+               date_info_tb_dodgy_dates_entities_RPD_EPD_dates %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-ID_DATE_INFO),
+               tolerance = 1E-3)
+
+# This difference was a change requested by SPH
+date_info_tb_dodgy_dates_entities_RPD_dates[202,]
+date_info_tb_dodgy_dates_entities_RPD_EPD_dates[202,]
+
+##### IBERIA ----
+date_info_tb_dodgy_dates_entities_IBERIA <-
+  date_info_tb_dodgy_dates_entities %>%
+  dplyr::filter(external_source == "IBERIA") %>%
+  .$external_entity_name %>%
+  extract_iberia()
+
+date_info_tb_dodgy_dates_entities_IBERIA_EPD_dates <-
+  date_info %>%
+  dplyr::filter(ID_ENTITY %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "IBERIA") %>%
+      .$ID_ENTITY
+  ))
+
+date_info_tb_dodgy_dates_entities_IBERIA_NEOTOMA_dates <-
+  EPD_DATES %>%
+  dplyr::filter(entity_name %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "IBERIA") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::select(-ages_already, -site_id, -site_name, -site_name_clean, -entity_name) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(age_calib = age_cal)
+
+date_info_tb_dodgy_dates_entities_IBERIA_dates <-
+  date_info_tb_dodgy_dates_entities_IBERIA$date_info %>%
+  dplyr::select(-ID_SITE) %>%
+  dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+  dplyr::left_join(dabr::select_all(conn, "external_link") %>%
+                     dplyr::filter(external_source == "IBERIA") %>%
+                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+  dplyr::select(-external_ID_ENTITY, -entity_name) %>%
+  dplyr::mutate(age_used = ifelse(is.na(notes), "yes", "no")) %>%
+  dplyr::rename(reason_age_not_used = notes) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(age_calib = age_cal) %>%
+  purrr::map_dfc(~ifelse(.x == "NULL", NA, .x)) %>%
+  dplyr::arrange(ID_ENTITY)
+
+waldo::compare(date_info_tb_dodgy_dates_entities_IBERIA_dates %>%
+                 .[order(colnames(.))],
+               date_info_tb_dodgy_dates_entities_IBERIA_EPD_dates %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-ID_DATE_INFO, -notes) %>%
+                 magrittr::set_class(class(.)[-1]),
+               tolerance = 1E-3,
+               max_diffs = Inf)
+
+##### EMBSECBIO ----
+date_info_tb_dodgy_dates_entities_EMBSECBIO <-
+  date_info_tb_dodgy_dates_entities %>%
+  dplyr::filter(external_source == "EMBSECBIO") %>%
+  .$external_ID_ENTITY %>%
+  extract_embsecbio()
+
+date_info_tb_dodgy_dates_entities_EMBSECBIO_EPD_dates <-
+  date_info %>%
+  dplyr::filter(ID_ENTITY %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "EMBSECBIO") %>%
+      .$ID_ENTITY
+  )) %>%
+  dplyr::arrange(ID_ENTITY, depth)
+
+date_info_tb_dodgy_dates_entities_EMBSECBIO_NEOTOMA_dates <-
+  EPD_DATES %>%
+  dplyr::filter(entity_name %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "EMBSECBIO") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::select(-ages_already, -site_id, -site_name, -site_name_clean, -entity_name) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(age_calib = age_cal)
+
+date_info_tb_dodgy_dates_entities_EMBSECBIO_dates <-
+  date_info_tb_dodgy_dates_entities_EMBSECBIO$date_info %>%
+  dplyr::select(-ID_DATE_INFO) %>%
+  dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+  dplyr::left_join(dabr::select_all(conn, "external_link") %>%
+                     dplyr::filter(external_source == "EMBSECBIO") %>%
+                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+  dplyr::select(-external_ID_ENTITY) %>%
+  dplyr::mutate(age_used = ifelse(is.na(date_comments), "yes", "no")) %>%
+  dplyr::rename(notes = date_comments) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::arrange(ID_ENTITY, depth)
+
+waldo::compare(date_info_tb_dodgy_dates_entities_EMBSECBIO_dates %>%
+                 .[order(colnames(.))],
+               date_info_tb_dodgy_dates_entities_EMBSECBIO_EPD_dates %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-ID_DATE_INFO, -age_calib, -reason_age_not_used) %>%
+                 magrittr::set_class(class(.)[-1]),
+               tolerance = 1E-3,
+               max_diffs = Inf)
+
+#### NEOTOMA ----
+date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates <-
+  dabr::select_all(conn, "date_info") %>%
+  dplyr::filter(ID_ENTITY %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "NEOTOMA") %>%
+      .$ID_ENTITY
+  )) %>%
+  dplyr::arrange(ID_ENTITY, depth, age_c14, age_calib)
+
+date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates_coretops <-
+  date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates %>%
+  dplyr::filter(date_type %>%
+                  stringr::str_starts("Top|top"))
+
+# Some core tops seem to be missing from the DB
+date_info_tb_dodgy_dates_entities_NEOTOMA_dates_coretops <-
+  EPD_DATES_coretops %>%
+  dplyr::filter(entity_name %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "NEOTOMA") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::select(-site_name, -entity_name) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(age_calib = age_cal) %>%
+  dplyr::arrange(ID_ENTITY, depth, age_c14, age_calib)
+
+# new_coretops <-
+#   date_info_tb_dodgy_dates_entities_NEOTOMA_dates_coretops %>%
+#   dplyr::select(ID_ENTITY, date_type, depth, thickness, lab_num, age_calib,
+#                 error, material_dated, age_used) %>%
+#   dplyr::left_join(
+#     date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates_coretops %>%
+#       dplyr::select(ID_ENTITY, ID_DATE_INFO, date_type, depth, thickness,
+#                     lab_num, age_calib, error, material_dated, age_used) %>%
+#       magrittr::set_names(paste0(colnames(.), "_DB")),
+#     by = c("ID_ENTITY" = "ID_ENTITY_DB")
+#   ) %>%
+#   dplyr::filter(is.na(ID_DATE_INFO_DB)) %>%
+#   dplyr::select(1:9) %>%
+#   dplyr::mutate(ID_DATE_INFO = 11170:11188, .after = ID_ENTITY)
+
+new_coretops <-
+  tibble::tribble(
+    ~ID_ENTITY, ~ID_DATE_INFO,              ~date_type, ~depth, ~thickness,         ~lab_num, ~age_calib, ~error,  ~material_dated, ~age_used,
+    48L,        11170L, "Top of core estimated",      0,         NA, "not applicable",          0,      5, "not applicable",     "yes",
+    53L,        11171L,     "Top of core known",      1,         NA, "not applicable",        -60,      5, "not applicable",     "yes",
+    186L,        11172L, "Top of core estimated",      0,         NA, "not applicable",          0,     50, "not applicable",     "yes",
+    525L,        11173L, "Top of core estimated",    837,         NA, "not applicable",          0,     50, "not applicable",     "yes",
+    568L,        11174L, "Top of core estimated",      5,         NA, "not applicable",        -52,      5, "not applicable",     "yes",
+    617L,        11175L, "Top of core estimated",    0.5,         NA, "not applicable",        -47,     10, "not applicable",     "yes",
+    624L,        11176L, "Top of core estimated",      3,         NA, "not applicable",        -31,     12, "not applicable",     "yes",
+    666L,        11177L, "Top of core estimated",      0,         NA, "not applicable",          0,      5, "not applicable",     "yes",
+    782L,        11178L, "Top of core estimated",   1297,         NA, "not applicable",          0,     50, "not applicable",     "yes",
+    876L,        11179L, "Top of core estimated",      0,         NA, "not applicable",        -52,     10, "not applicable",     "yes",
+    1126L,        11180L, "Top of core estimated",      0,         NA, "not applicable",          0,      5, "not applicable",     "yes",
+    1182L,        11181L, "Top of core estimated",      0,         NA, "not applicable",        -57,     10, "not applicable",     "yes",
+    1189L,        11182L,     "Top of core known",   1100,         NA, "not applicable",        -66,      2, "not applicable",     "yes",
+    1222L,        11183L, "Top of core estimated",      0,         NA, "not applicable",        -53,      5, "not applicable",     "yes",
+    1234L,        11184L, "Top of core estimated",      0,         NA, "not applicable",          0,      5, "not applicable",     "yes",
+    1258L,        11185L,     "Top of core known",      0,         NA, "not applicable",        -35,      1, "not applicable",     "yes",
+    1365L,        11186L, "Top of core estimated",      2,         NA, "not applicable",        -52,     10, "not applicable",     "yes",
+    1433L,        11187L, "Top of core estimated",      0,         NA, "not applicable",        -48,     10, "not applicable",     "yes",
+    1522L,        11188L, "Top of core estimated",      0,         NA, "not applicable",          0,      5, "not applicable",     "yes"
+  )
+new_coretops %>%
+  rpd:::add_records(conn = conn, table = "date_info", dry_run = TRUE)
+# Results: 19 records were inserted.
+
+date_info_tb_dodgy_dates_entities_NEOTOMA_dates <-
+  EPD_DATES %>%
+  dplyr::filter(entity_name %in% (
+    date_info_tb_dodgy_dates_entities %>%
+      dplyr::filter(external_source == "NEOTOMA") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::select(-ages_already, -site_id, -site_name, -site_name_clean, -entity_name) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::rename(age_calib = age_cal) %>%
+  dplyr::arrange(ID_ENTITY, depth, age_c14, age_calib) %>%
+  dplyr::filter(!is.na(date_type))
+
+waldo::compare(date_info_tb_dodgy_dates_entities_NEOTOMA_dates %>%
+                 # .[1:200,] %>%
+                 .[order(colnames(.))],
+               date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates %>%
+                 # .[1:200,] %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-ID_DATE_INFO) %>%
+                 magrittr::set_class(class(.)),
+               tolerance = 1E-3,
+               max_diffs = Inf)
+
+date_info_tb_dodgy_dates_entities_NEOTOMA_dates[169,]
+date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates[169,]
+
+c(date_info_tb_dodgy_dates_entities_NEOTOMA_dates$ID_ENTITY,
+  date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates$ID_ENTITY) %>%
+  unique() %>%
+  sort() %>%
+  purrr::map_dbl(function(id) {
+    a <- date_info_tb_dodgy_dates_entities_NEOTOMA_dates %>%
+      dplyr::filter(ID_ENTITY == id)
+    b <- date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates %>%
+      dplyr::filter(ID_ENTITY == id)
+    if(nrow(a) != nrow(b))
+      return(id)
+    NA
+  })
+
+# These differences are due to an additional date added
+date_info_tb_dodgy_dates_entities_NEOTOMA_dates %>%
+  dplyr::filter(ID_ENTITY == 1667) %>%
+  dplyr::bind_rows(date_info_tb_dodgy_dates_entities_NEOTOMA_EPD_dates %>%
+                     dplyr::filter(ID_ENTITY == 1667)) %>%
+  View()
+
+# Add missing core-top
+tibble::tibble(
+  ID_ENTITY = 33,
+  ID_DATE_INFO = 11169,
+  date_type = "Top of core known",
+  depth = 0,
+  lab_num = "not applicable",
+  age_calib = -46,
+  error = 1,
+  material_dated = "not applicable",
+  age_used = "yes"
+) %>%
+  rpd:::add_records(conn = conn, table = "date_info", dry_run = TRUE)
+# Results: 1 record was inserted.
+
+# aux <- date_info_tb_dodgy_dates_entities_RPD_NEOTOMA_dates$ID_ENTITY %>%
+#   unique() %>%
+#   sort() %>%
+#   purrr::map_df(function(id) {
+#     a <- date_info_tb_dodgy_dates_entities_RPD_NEOTOMA_dates %>%
+#       dplyr::filter(ID_ENTITY == id) %>%
+#       dplyr::select(ID_ENTITY,
+#                     depth_NEO = depth,
+#                     thickness_NEO = thickness,
+#                     lab_num_NEO = lab_num) %>%
+#       dplyr::mutate(source = "NEOTOMA")
+#     b <- date_info_tb_dodgy_dates_entities_RPD_EPD_dates %>%
+#       dplyr::filter(ID_ENTITY == id) %>%
+#       dplyr::select(ID_ENTITY, ID_DATE_INFO,
+#                     depth, thickness, lab_num) %>%
+#       dplyr::mutate(source = "SPECIAL-EPD")
+#     if (nrow(a) == nrow(b))
+#       return(dplyr::bind_cols(a %>%
+#                                 magrittr::set_names(
+#                                   paste0(colnames(.), "_NEO")
+#                                 ),
+#                               b %>%
+#                                 magrittr::set_names(
+#                                   paste0(colnames(.), "_DB")
+#                                 )))
+#     dplyr::bind_rows(a, b)
+#   })
+# View(aux)
+
 external_links_rpd <- dabr::select_all(conn, "external_link") %>%
   dplyr::filter(external_source == "RPD")
 entities_rpd <- dabr::select_all(conn, "entity") %>%
@@ -10264,7 +10613,7 @@ entities_rpd <- dabr::select_all(conn, "entity") %>%
 rpd_info <- external_links_rpd$external_ID_ENTITY %>%
   extract_rpd()
 
-### Dates ----
+
 rpd_dates <- rpd_info$date_info %>%
   dplyr::select(-ID_DATE_INFO) %>%
   dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
@@ -10321,51 +10670,359 @@ waldo::compare(dabr::select_all(conn, "date_info") %>%
                tolerance = 1E-9)
 
 ### Samples ----
-rpd_samples <- rpd_info$sample %>%
-  dplyr::select(-model_name_original, -charcoal_measurement) %>%
-  dplyr::left_join(external_links_rpd %>%
-                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
-  dplyr::select(-external_ID_ENTITY) %>%
-  dplyr::relocate(ID_ENTITY, .before = 1)
+sample_tb <-
+  dabr::select_all(conn, "sample")
 
-epd_samples <- dabr::select_all(conn, "sample") %>%
-  dplyr::filter(ID_ENTITY %in% entities_rpd$ID_ENTITY)
+samples_tb_2 <- sample_tb %>%
+  dplyr::filter(thickness >= -1000, thickness < 1)
+id_entities <- samples_tb_2 %>%
+  .$ID_ENTITY %>% unique() %>% sort()
+aux <- special.epd::snapshot(conn, ID_ENTITY = id_entities)
+aux_samples_counts <- EPD_COUNTS %>%
+  dplyr::filter(entity_name %in% aux$entity$entity_name) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::select(1:16) %>%
+  dplyr::select(-site_id, -site_name, -site_name_clean, -dataset_id,
+                -dataset_name, -entity_name, -chronology_id, -sample_id) %>%
+  dplyr::arrange(ID_ENTITY, depth)
+  # smpds::rm_na_taxa(1:16) %>%
+  # dplyr::select(-c(1:6)) %>%
+  # dplyr::select(-chronology_id, -sample_id, -unit_name)
 
-corrected_samples_rpd <- unique(entities_rpd$ID_ENTITY) %>%
+EPD_samples <- aux$sample %>%
+  dplyr::arrange(ID_ENTITY, depth)
+NEOTOMA_samples <- aux_samples_counts %>%
+  dplyr::arrange(ID_ENTITY, depth)
+
+c(EPD_samples$ID_ENTITY,
+  NEOTOMA_samples$ID_ENTITY) %>%
+  unique() %>%
   sort() %>%
-  purrr::map_df(function(id) {
-    RPD <- rpd_samples %>%
-      dplyr::filter(ID_ENTITY == id) %>%
-      dplyr::select(-ID_SAMPLE)
-    DB <- epd_samples %>%
-      dplyr::filter(ID_ENTITY == id) %>%
-      dplyr::select(ID_ENTITY, ID_SAMPLE, depth, thickness, age)
-    waldo::compare(RPD %>%
-                     .[order(colnames(.))],
-                   DB %>%
-                     .[order(colnames(.))] %>%
-                     magrittr::set_class(c("sample", class(.))),
-                   max_diffs = Inf,
-                   tolerance = 1E-9) %>%
-      print()
-    if (dim(RPD)[1] != dim(DB)[1]) {
-      message("ID_ENTITY: ", id)
-      return(NULL)
-    }
-    DB %>%
-      dplyr::select(ID_SAMPLE,
-                    old_depth = depth,
-                    old_thick = thickness) %>%
-      dplyr::bind_cols(RPD %>%
-                         dplyr::select(ID_ENTITY, depth, thickness))
+  purrr::map(function(id) {
+    a <- EPD_samples %>%
+      dplyr::filter(ID_ENTITY == id)
+    b <- NEOTOMA_samples %>%
+      dplyr::filter(ID_ENTITY == id)
+    waldo::compare(a, b)
   })
 
-corrected_samples_rpd %>%
-  dplyr::filter(is.na(ID_SAMPLE) |
-                  is.na(ID_ENTITY))
+c(EPD_samples$ID_ENTITY,
+  NEOTOMA_samples$ID_ENTITY) %>%
+  unique() %>%
+  sort() %>% .[c(16, 21)]
+
+# Samples with sample thickness = 0
+EPD_samples %>%
+  dplyr::filter(ID_ENTITY == 929) %>%
+  dplyr::select(ID_ENTITY, ID_SAMPLE, thickness) %>%
+  dplyr::mutate(thickness = ifelse(round(thickness, 3) == 0, NA, thickness)) %>%
+  rpd:::update_records(conn = conn, table = "sample",
+                       dry_run = !TRUE, PK = 1:2)
+# Results: 38 records were updated.
+
+NEOTOMA_samples %>%
+  dplyr::filter(ID_ENTITY == 621)
+
+
+# waldo::compare(aux_samples_counts %>%
+#                  dplyr::select(ID_ENTITY, depth, thickness) %>%
+#                  # dplyr::select(1:7) %>%
+#                  .[order(colnames(.))],
+#                EPD_samples %>%
+#                  dplyr::select(ID_ENTITY, depth, thickness) %>%
+#                  .[order(colnames(.))],
+#                tolerance = 1E-3,
+#                max_diffs = Inf)
+
+
+samples_with_am_tb <-
+  sample_tb %>%
+  dplyr::mutate(has_AM = ID_SAMPLE %>%
+                  purrr::map_lgl(function(id) {
+                    (dabr::select(conn,
+                                 "SELECT * FROM pollen_count WHERE",
+                                 "ID_SAMPLE =",id,
+                                 "LIMIT 1",
+                                 quiet = TRUE) %>%
+                      nrow()) > 0
+                  }))
+
+sample_tb_dodgy_samples <-
+  # sample_tb %>%
+  samples_with_am_tb %>%
+  dplyr::filter(!has_AM) %>%
+  dplyr::filter(thickness < 1)
+
+sample_tb_dodgy_samples_external_links <-
+  dabr::select_all(conn, "external_link") %>%
+  dplyr::filter(ID_ENTITY %in% unique(sample_tb_dodgy_samples$ID_ENTITY)) %>%
+  dplyr::filter(external_source != "NEOTOMA")
+
+sample_tb_dodgy_samples_entities <-
+  dabr::select_all(conn, "entity") %>%
+  dplyr::filter(ID_ENTITY %in% unique(sample_tb_dodgy_samples$ID_ENTITY)) %>%
+  dplyr::left_join(sample_tb_dodgy_samples_external_links) %>%
+  dplyr::mutate(external_source =
+                  ifelse(is.na(external_source), "NEOTOMA",
+                         external_source))
+
+##### RPD ----
+sample_tb_dodgy_samples_entities_RPD <-
+  sample_tb_dodgy_samples_entities %>%
+  dplyr::filter(external_source == "RPD") %>%
+  .$external_ID_ENTITY %>%
+  extract_rpd()
+
+sample_tb_dodgy_samples_entities_RPD_EPD_samples <-
+  # sample_tb %>%
+  samples_with_am_tb %>%
+  dplyr::filter(ID_ENTITY %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "RPD") %>%
+      .$ID_ENTITY
+  ))
+
+sample_tb_dodgy_samples_entities_RPD_NEOTOMA_samples <-
+  EPD_COUNTS %>%
+  dplyr::filter(entity_name %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "RPD") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::select(1:16) %>%
+  dplyr::select(-site_id, -site_name, -site_name_clean, -dataset_id,
+                -dataset_name, -entity_name, -chronology_id, -sample_id)
+
+sample_tb_dodgy_samples_entities_RPD_samples <-
+  sample_tb_dodgy_samples_entities_RPD$sample %>%
+  dplyr::select(-ID_SAMPLE) %>%
+  dplyr::left_join(external_links_rpd %>%
+                     dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+  dplyr::select(-external_ID_ENTITY, -charcoal_measurement,
+                -model_name_original) %>%
+  dplyr::relocate(ID_ENTITY, .before = 1)
+
+waldo::compare(sample_tb_dodgy_samples_entities_RPD_samples %>%
+                 .[order(colnames(.))] %>%
+                 magrittr::set_class(class(.)[-1]),
+               sample_tb_dodgy_samples_entities_RPD_EPD_samples %>%
+                 .[order(colnames(.))] %>%
+                 dplyr::select(-ID_SAMPLE, -age_older, -age_younger,
+                               -chronology_name, -count_type, -sample_type,
+                               -age_type, -has_AM),
+               tolerance = 1E-9)
+
+sample_tb_dodgy_samples_entities_RPD_samples %>%
+  magrittr::set_names(paste0(colnames(.), "_RPD")) %>%
+  dplyr::bind_cols(sample_tb_dodgy_samples_entities_RPD_EPD_samples %>%
+                     dplyr::select(ID_ENTITY, ID_SAMPLE, depth, thickness, age)
+                   ) %>%
+  dplyr::filter(round(depth_RPD, 3) == round(depth, 3)) %>%
+  dplyr::filter(thickness_RPD != thickness) %>%
+  dplyr::select(ID_ENTITY, ID_SAMPLE, thickness = thickness_RPD) %>%
+  rpd:::update_records(conn = conn, table = "sample",
+                       dry_run = TRUE, PK = 1:2)
+# Results: 1560 records were updated.
+
+##### IBERIA ----
+sample_tb_dodgy_samples_entities_IBERIA <-
+  sample_tb_dodgy_samples_entities %>%
+  dplyr::filter(external_source == "IBERIA") %>%
+  .$external_entity_name %>%
+  extract_iberia()
+
+sample_tb_dodgy_samples_entities_IBERIA_EPD_samples <-
+  samples_with_am_tb %>%
+  dplyr::filter(ID_ENTITY %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "IBERIA") %>%
+      .$ID_ENTITY
+  ))
+
+sample_tb_dodgy_samples_entities_IBERIA_NEOTOMA_samples <-
+  EPD_COUNTS %>%
+  dplyr::filter(entity_name %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "IBERIA") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::select(1:16) %>%
+  dplyr::select(-site_id, -site_name, -site_name_clean, -dataset_id,
+                -dataset_name, -entity_name, -chronology_id, -sample_id)
+
+# sample_tb_dodgy_samples_entities_IBERIA_samples <-
+#   sample_tb_dodgy_samples_entities_IBERIA$samples %>%
+#   dplyr::select(-ID_SITE) %>%
+#   dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+#   dplyr::left_join(dabr::select_all(conn, "external_link") %>%
+#                      dplyr::filter(external_source == "IBERIA") %>%
+#                      dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+#   dplyr::select(-external_ID_ENTITY, -entity_name) %>%
+#   dplyr::mutate(age_used = ifelse(is.na(notes), "yes", "no")) %>%
+#   dplyr::rename(reason_age_not_used = notes) %>%
+#   dplyr::relocate(ID_ENTITY, .before = 1) %>%
+#   dplyr::rename(age_calib = age_cal) %>%
+#   purrr::map_dfc(~ifelse(.x == "NULL", NA, .x)) %>%
+#   dplyr::arrange(ID_ENTITY)
+#
+# waldo::compare(sample_tb_dodgy_samples_entities_IBERIA_samples %>%
+#                  .[order(colnames(.))],
+#                sample_tb_dodgy_samples_entities_IBERIA_EPD_samples %>%
+#                  .[order(colnames(.))] %>%
+#                  dplyr::select(-ID_DATE_INFO, -notes) %>%
+#                  magrittr::set_class(class(.)[-1]),
+#                tolerance = 1E-3,
+#                max_diffs = Inf)
+
+##### EMBSECBIO ----
+sample_tb_dodgy_samples_entities_EMBSECBIO <-
+  sample_tb_dodgy_samples_entities %>%
+  dplyr::filter(external_source == "EMBSECBIO") %>%
+  .$external_ID_ENTITY %>%
+  extract_embsecbio()
+
+sample_tb_dodgy_samples_entities_EMBSECBIO_EPD_samples <-
+  samples %>%
+  dplyr::filter(ID_ENTITY %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "EMBSECBIO") %>%
+      .$ID_ENTITY
+  )) %>%
+  dplyr::arrange(ID_ENTITY, depth)
+
+sample_tb_dodgy_samples_entities_EMBSECBIO_NEOTOMA_samples <-
+  EPD_COUNTS %>%
+  dplyr::filter(entity_name %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "RPD") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::select(1:16) %>%
+  dplyr::select(-site_id, -site_name, -site_name_clean, -dataset_id,
+                -dataset_name, -entity_name, -chronology_id, -sample_id)
+
+# sample_tb_dodgy_samples_entities_EMBSECBIO_samples <-
+#   sample_tb_dodgy_samples_entities_EMBSECBIO$samples %>%
+#   dplyr::select(-ID_DATE_INFO) %>%
+#   dplyr::rename(external_ID_ENTITY = ID_ENTITY) %>%
+#   dplyr::left_join(dabr::select_all(conn, "external_link") %>%
+#                      dplyr::filter(external_source == "EMBSECBIO") %>%
+#                      dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+#   dplyr::select(-external_ID_ENTITY) %>%
+#   dplyr::mutate(age_used = ifelse(is.na(date_comments), "yes", "no")) %>%
+#   dplyr::rename(notes = date_comments) %>%
+#   dplyr::relocate(ID_ENTITY, .before = 1) %>%
+#   dplyr::arrange(ID_ENTITY, depth)
+#
+# waldo::compare(sample_tb_dodgy_samples_entities_EMBSECBIO_samples %>%
+#                  .[order(colnames(.))],
+#                sample_tb_dodgy_samples_entities_EMBSECBIO_EPD_samples %>%
+#                  .[order(colnames(.))] %>%
+#                  dplyr::select(-ID_DATE_INFO, -age_calib, -reason_age_not_used) %>%
+#                  magrittr::set_class(class(.)[-1]),
+#                tolerance = 1E-3,
+#                max_diffs = Inf)
+
+#### NEOTOMA ----
+sample_tb_dodgy_samples_entities_NEOTOMA_EPD_samples <-
+  dabr::select_all(conn, "sample") %>%
+  dplyr::filter(ID_ENTITY %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "NEOTOMA") %>%
+      .$ID_ENTITY
+  )) %>%
+  dplyr::arrange(ID_ENTITY, ID_SAMPLE, depth, thickness, age)
+
+# Some core tops seem to be missing from the DB
+sample_tb_dodgy_samples_entities_NEOTOMA_samples <-
+  EPD_COUNTS %>%
+  dplyr::filter(entity_name %in% (
+    sample_tb_dodgy_samples_entities %>%
+      dplyr::filter(external_source == "NEOTOMA") %>%
+      .$entity_name
+  )) %>%
+  dplyr::left_join(dabr::select(conn,
+                                "SELECT ID_ENTITY, entity_name",
+                                "FROM entity"),
+                   by = "entity_name") %>%
+  dplyr::relocate(ID_ENTITY, .before = 1) %>%
+  dplyr::select(1:16) %>%
+  dplyr::select(-site_id, -site_name, -site_name_clean, -dataset_id,
+                -dataset_name, -entity_name, -chronology_id, -sample_id)
+
+waldo::compare(sample_tb_dodgy_samples_entities_NEOTOMA_EPD_samples %>%
+                 .[order(colnames(.))],
+               sample_tb_dodgy_samples_entities_NEOTOMA_samples %>%
+                 .[order(colnames(.))] %>%
+                 # dplyr::select(-ID_SAMPLE) %>%
+                 magrittr::set_class(class(.)[-1]),
+               tolerance = 1E-3,
+               max_diffs = Inf)
+
+# rpd_samples <- rpd_info$sample %>%
+#   dplyr::select(-model_name_original, -charcoal_measurement) %>%
+#   dplyr::left_join(external_links_rpd %>%
+#                      dplyr::select(ID_ENTITY, external_ID_ENTITY)) %>%
+#   dplyr::select(-external_ID_ENTITY) %>%
+#   dplyr::relocate(ID_ENTITY, .before = 1)
+#
+# epd_samples <- dabr::select_all(conn, "sample") %>%
+#   dplyr::filter(ID_ENTITY %in% entities_rpd$ID_ENTITY)
+#
+# corrected_samples_rpd <- unique(entities_rpd$ID_ENTITY) %>%
+#   sort() %>%
+#   purrr::map_df(function(id) {
+#     RPD <- rpd_samples %>%
+#       dplyr::filter(ID_ENTITY == id) %>%
+#       dplyr::select(-ID_SAMPLE)
+#     DB <- epd_samples %>%
+#       dplyr::filter(ID_ENTITY == id) %>%
+#       dplyr::select(ID_ENTITY, ID_SAMPLE, depth, thickness, age)
+#     waldo::compare(RPD %>%
+#                      .[order(colnames(.))],
+#                    DB %>%
+#                      .[order(colnames(.))] %>%
+#                      magrittr::set_class(c("sample", class(.))),
+#                    max_diffs = Inf,
+#                    tolerance = 1E-9) %>%
+#       print()
+#     if (dim(RPD)[1] != dim(DB)[1]) {
+#       message("ID_ENTITY: ", id)
+#       return(NULL)
+#     }
+#     DB %>%
+#       dplyr::select(ID_SAMPLE,
+#                     old_depth = depth,
+#                     old_thick = thickness) %>%
+#       dplyr::bind_cols(RPD %>%
+#                          dplyr::select(ID_ENTITY, depth, thickness))
+#   })
+#
 # corrected_samples_rpd %>%
-#   dplyr::filter(round(old_depth, 6) != round(depth, 6))
-#   dplyr::select(ID_ENTITY, ID_SAMPLE, depth, thickness) %>%
-#   rpd:::update_records(conn = conn, table = "sample",
-#                        dry_run = TRUE, PK = 1:2)
+#   dplyr::filter(is.na(ID_SAMPLE) |
+#                   is.na(ID_ENTITY))
+# # corrected_samples_rpd %>%
+# #   dplyr::filter(round(old_depth, 6) != round(depth, 6))
+# #   dplyr::select(ID_ENTITY, ID_SAMPLE, depth, thickness) %>%
+# #   rpd:::update_records(conn = conn, table = "sample",
+# #                        dry_run = TRUE, PK = 1:2)
 
