@@ -1,3 +1,17 @@
+get_links <- function(conn, ID_ENTITY) {
+  conn %>%
+    dabr::select("SELECT * FROM external_link WHERE ID_ENTITY = ", ID_ENTITY)
+}
+
+rm_links <- function(conn, ID_ENTITY, external_source) {
+  links <- get_links(conn, ID_ENTITY)
+  conn %>%
+    dabr::delete("DELETE FROM external_link WHERE ID_ENTITY = ",
+                 ID_ENTITY, " AND external_source = ",
+                 dabr::quote(external_source))
+  return(links)
+}
+
 #' Create a snapshot of the data linked to entities
 #'
 #' Create a snapshot of the data linked to entities. Including metadata,
@@ -14,6 +28,8 @@
 #' @rdname snapshot
 #' @export
 snapshot <- function(x, ...) {
+  if (missing(x))
+    return(snapshot.default(x, ...))
   UseMethod("snapshot", x)
 }
 
