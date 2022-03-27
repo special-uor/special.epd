@@ -62,7 +62,67 @@ snapshot.MariaDBConnection <- function(x,
 #' @rdname snapshot
 #' @export
 snapshot.character <- function(x, ...) {
-  message("Calling character snapshot...")
+  # Local bindings
+  . <- amalgamation_level <- count <- taxon_name <- NULL
+  ID_SAMPLE <- ID_SAMPLE <- ID_TAXON <- NULL
+
+  # dot_params <- list(...)
+  # if (!("entity_name" %in% names(dot_params))) {
+  #   message("Expecting at least one value for `entity_name`")
+  #   return(NULL)
+  # }
+  entity_tb <- special.epd::entity %>%
+    dplyr::filter(entity_name %in% x)
+  if (nrow(entity_tb) == 0) {
+    message("No records were found!")
+    return(NULL)
+  }
+
+  date_info_tb <- special.epd::date_info %>%
+    dplyr::filter(ID_ENTITY %in% entity_tb$ID_ENTITY)
+  sample_tb <- special.epd::sample %>%
+    dplyr::filter(ID_ENTITY %in% entity_tb$ID_ENTITY)
+  if (nrow(sample_tb) > 0) {
+    tryCatch({
+      age_model_tb <- special.epd::age_model %>%
+        dplyr::filter(ID_SAMPLE %in% sample_tb$ID_SAMPLE) %>%
+        dplyr::left_join(special.epd::model_name, by = "ID_MODEL")
+    }, error = function(e) {
+      age_model_tb <- NULL
+    })
+    tryCatch({
+      pollen_count_tb <- special.epd::pollen_count %>%
+        dplyr::filter(ID_SAMPLE %in% sample_tb$ID_SAMPLE) %>%
+        dplyr::left_join(special.epd::taxon_name, by = "ID_TAXON") %>%
+        split(.$amalgamation_level) %>%
+        purrr::map(function(counts) {
+          counts %>%
+            dplyr::select(-ID_TAXON, -amalgamation_level) %>%
+            dplyr::filter(!is.na(count)) %>%
+            tidyr::pivot_wider(id_cols = c(ID_SAMPLE),
+                               names_from = taxon_name,
+                               values_from = count) %>%
+            dplyr::select(1, order(colnames(.)[-1]) + 1)
+        }) %>%
+        magrittr::set_names(names(.) %>%
+                              stringr::str_replace_all("0", "clean") %>%
+                              stringr::str_replace_all("1", "intermediate") %>%
+                              stringr::str_replace_all("2", "amalgamated"))
+    }, error = function(e) {
+      pollen_count_tb <- NULL
+    })
+  } else {
+    age_model_tb <- NULL
+    pollen_count_tb <- NULL
+  }
+  list(
+    entity = entity_tb,
+    date_info = date_info_tb,
+    sample = sample_tb,
+    age_model = age_model_tb,
+    pollen_count = pollen_count_tb
+  ) %>%
+    magrittr::set_class(c("special.epd", class(.)))
 }
 
 snapshot.numeric <- function(x, ...) {
