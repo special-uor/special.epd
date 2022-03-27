@@ -3,7 +3,8 @@
 \docType{data}
 \name{IBERIA_pollen_dates_v2}
 \alias{IBERIA_pollen_dates_v2}
-\title{\code{IBERIA_pollen_dates_v2}}
+\title{#' \code{EPD_COUNTS}
+"EPD_COUNTS"}
 \format{
 An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) with 950 rows and 15 columns.
 }
@@ -11,6 +12,21 @@ An object of class \code{tbl_df} (inherits from \code{tbl}, \code{data.frame}) w
 IBERIA_pollen_dates_v2
 }
 \description{
+#' \code{EPD_DATES_coretops}
+"EPD_DATES_coretops"
+}
+\details{
+#' \code{EPD_DATES}
+"EPD_DATES"
+
+#' \code{EPD_METADATA}
+"EPD_METADATA"
+
+#' \code{EPD_taxa_amalgamation}
+"EPD_taxa_amalgamation"
+
+#' \code{EPD_taxa_to_exclude}
+"EPD_taxa_to_exclude"
 \code{IBERIA_pollen_dates_v2}
 }
 \keyword{datasets}

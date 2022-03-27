@@ -4,6 +4,7 @@
 \alias{snapshot}
 \alias{snapshot.MariaDBConnection}
 \alias{snapshot.character}
+\alias{snapshot.numeric}
 \alias{snapshot.tbl_df}
 \alias{snapshot.tbl}
 \alias{snapshot.data.frame}
@@ -15,6 +16,8 @@ snapshot(x, ...)
 \method{snapshot}{MariaDBConnection}(x, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE)
 
 \method{snapshot}{character}(x, ...)
+
+\method{snapshot}{numeric}(x, use_id_site = FALSE, ...)
 
 \method{snapshot}{tbl_df}(x, ...)
 
@@ -41,6 +44,9 @@ database, included in this package.}
 \item{entity_name}{Optional, if \code{ID_SITE} or \code{ID_ENTITY} are provided.}
 
 \item{quiet}{Boolean flag to indicate if queries should be displayed.}
+
+\item{use_id_site}{Boolean flag to indicate whether to search using
+\code{ID_ENTITY} (default) or \code{ID_SITE}, using the values in \code{x}.}
 }
 \value{
 List with the individual tables.
