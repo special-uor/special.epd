@@ -367,6 +367,20 @@ snapshot.default <- function(x,
   return(.snapshot_by_entity(x, entity_tb$ID_ENTITY, quiet = quiet))
 }
 
+#' @keywords internal
+.snapshot_by_site_name <- function(x, site_name, quiet = TRUE) {
+  entity_tb <- x %>%
+    dabr::select("SELECT ID_ENTITY FROM entity WHERE site_name IN (",
+                 paste0(dabr::quote(site_name), collapse = ", "),
+                 ")",
+                 quiet = quiet)
+  if (nrow(entity_tb) == 0) {
+    message("No records were found!")
+    return(NULL)
+  }
+  return(.snapshot_by_entity(x, entity_tb$ID_ENTITY, quiet = quiet))
+}
+
 #' Write DB snapshot to disk
 #' Write DB snapshot to disk as individual CSV files.
 #'
