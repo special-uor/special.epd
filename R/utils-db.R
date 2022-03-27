@@ -125,8 +125,23 @@ snapshot.character <- function(x, ...) {
     magrittr::set_class(c("special.epd", class(.)))
 }
 
-snapshot.numeric <- function(x, ...) {
-  message("Calling numeric snapshot...")
+#' @param use_id_site Boolean flag to indicate whether to search using
+#'     `ID_ENTITY` (default) or `ID_SITE`, using the values in `x`.
+#' @rdname snapshot
+#' @export
+snapshot.numeric <- function(x, use_id_site = FALSE, ...) {
+  if (use_id_site) {
+    entity_tb <- special.epd::entity %>%
+      dplyr::filter(ID_SITE %in% x)
+  } else {
+    entity_tb <- special.epd::entity %>%
+      dplyr::filter(ID_ENTITY %in% x)
+  }
+  if (nrow(entity_tb) == 0) {
+    message("No records were found!")
+    return(NULL)
+  }
+  return(snapshot(entity_tb$entity_name))
 }
 
 #' @rdname snapshot
