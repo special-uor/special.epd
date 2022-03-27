@@ -4,3 +4,7 @@
 ^data-raw$
 ^\.R\.ignore$
 ^inst$
+^README\.Rmd$
+^data/EPD$
+^data/IBERIA$
+^\.github$
