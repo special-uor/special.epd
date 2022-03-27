@@ -25,7 +25,7 @@ snapshot(x, ...)
 
 \method{snapshot}{data.frame}(x, ...)
 
-\method{snapshot}{default}(x, ID_SITE, ID_ENTITY, entity_name)
+\method{snapshot}{default}(x, ....)
 }
 \arguments{
 \item{x}{This object accepts different classes. If the given object is
