@@ -34,34 +34,75 @@ snapshot <- function(x, ...) {
 }
 
 # @param x DB connection object.
-#' @param ID_SITE Optional, if `ID_ENTITY` or `entity_name` are provided.
-#' @param ID_ENTITY Optional, if `ID_SITE` or `entity_name` are provided.
-#' @param entity_name Optional, if `ID_SITE` or `ID_ENTITY` are provided.
+#' @param ID_ENTITY Optional, if `ID_SITE`, `entity_name` or `site_name` are
+#'     provided.
+#' @param ID_SITE Optional, if `ID_ENTITY`, `entity_name` or `site_name` are
+#'     provided.
+#' @param entity_name Optional, if `ID_SITE`, `ID_ENTITY` or `site_name` are
+#'     provided.
+#' @param site_name Optional, if `ID_SITE`, `ID_ENTITY` or `entity_name` are
+#'     provided.
 #' @param quiet Boolean flag to indicate if queries should be displayed.
 #'
 #' @rdname snapshot
 #' @return List with the individual tables.
 #' @export
+#'
+#' @examples
+#'
+#' \dontrun{
+#' conn <- dabr::open_conn_mysql(dbname = "SPECIAL-EPD",
+#'                               password = rstudioapi::askForPassword())
+#' # Using the entity name
+#' snp1 <- special.epd::snapshot(conn, entity_name = "MBA3")
+#' snp1
+#'
+#' # Using the site name
+#' snp2 <- special.epd::snapshot(conn, site_name = "Aammiq")
+#' snp2
+#'
+#' # Using the ID_ENTITY
+#' snp3 <- special.epd::snapshot(conn, ID_ENTITY = 1)
+#' snp3
+#'
+#' # Using the ID_SITE
+#' snp4 <- special.epd::snapshot(conn, ID_SITE = 2)
+#' snp4
+#' }
 snapshot.MariaDBConnection <- function(x,
-                                       ID_SITE,
                                        ID_ENTITY,
+                                       ID_SITE,
                                        entity_name,
+                                       site_name,
                                        quiet = TRUE) {
-  if (!missing(ID_SITE)) {
-    .snapshot_by_site(x, ID_SITE, quiet = quiet)
-  } else if (!missing(ID_ENTITY)) {
+  if (!missing(ID_ENTITY)) {
     .snapshot_by_entity(x, ID_ENTITY, quiet = quiet)
+  } else if (!missing(ID_SITE)) {
+    .snapshot_by_site(x, ID_SITE, quiet = quiet)
   } else if (!missing(entity_name)) {
     .snapshot_by_entity_name(x, entity_name, quiet = quiet)
+  } else if (!missing(site_name)) {
+    .snapshot_by_site_name(x, site_name, quiet = quiet)
   } else {
     message("At least one of the following is required:\n",
-            "- ID_SITE\n- ID_ENTITY\n- entity_name\n")
+            "- ID_SITE\n- ID_ENTITY\n- entity_name\n- site_name")
   }
 }
 
+#' @param use_site_name Boolean flag to indicate whether to search using
+#'     `entity_name` (default) or `site_name`, using the values in `x`.
 #' @rdname snapshot
 #' @export
-snapshot.character <- function(x, ...) {
+#'
+#' @examples
+#' # Using the entity name
+#' snp1 <- special.epd::snapshot("MBA3")
+#' snp1
+#'
+#' # Using the site name
+#' snp2 <- special.epd::snapshot("Aammiq", use_site_name = TRUE)
+#' snp2
+snapshot.character <- function(x, use_site_name = FALSE, ...) {
   # Local bindings
   . <- amalgamation_level <- count <- taxon_name <- NULL
   ID_SAMPLE <- ID_SAMPLE <- ID_TAXON <- NULL
@@ -71,8 +112,13 @@ snapshot.character <- function(x, ...) {
   #   message("Expecting at least one value for `entity_name`")
   #   return(NULL)
   # }
-  entity_tb <- special.epd::entity %>%
-    dplyr::filter(entity_name %in% x)
+  if (use_site_name) {
+    entity_tb <- special.epd::entity %>%
+      dplyr::filter(site_name %in% x)
+  } else {
+    entity_tb <- special.epd::entity %>%
+      dplyr::filter(entity_name %in% x)
+  }
   if (nrow(entity_tb) == 0) {
     message("No records were found!")
     return(NULL)
@@ -122,13 +168,22 @@ snapshot.character <- function(x, ...) {
     age_model = age_model_tb,
     pollen_count = pollen_count_tb
   ) %>%
-    magrittr::set_class(c("special.epd", class(.)))
+    magrittr::set_class(c("snapshot", class(.)))
 }
 
 #' @param use_id_site Boolean flag to indicate whether to search using
 #'     `ID_ENTITY` (default) or `ID_SITE`, using the values in `x`.
 #' @rdname snapshot
 #' @export
+#'
+#' @examples
+#' # Using the ID_ENTITY
+#' snp1 <- special.epd::snapshot(1)
+#' snp1
+#'
+#' # Using the ID_SITE
+#' snp2 <- special.epd::snapshot(2, use_id_site = TRUE)
+#' snp2
 snapshot.numeric <- function(x, use_id_site = FALSE, ...) {
   if (use_id_site) {
     entity_tb <- special.epd::entity %>%
@@ -295,7 +350,7 @@ snapshot.default <- function(x,
     age_model = age_model_tb,
     pollen_count = pollen_count_tb
   ) %>%
-    magrittr::set_class(c("special.epd", class(.)))
+    magrittr::set_class(c("snapshot", class(.)))
 }
 
 #' @keywords internal
