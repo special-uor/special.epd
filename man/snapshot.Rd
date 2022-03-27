@@ -4,6 +4,7 @@
 \alias{snapshot}
 \alias{snapshot.MariaDBConnection}
 \alias{snapshot.character}
+\alias{snapshot.numeric}
 \alias{snapshot.tbl_df}
 \alias{snapshot.tbl}
 \alias{snapshot.data.frame}
@@ -12,9 +13,11 @@
 \usage{
 snapshot(x, ...)
 
-\method{snapshot}{MariaDBConnection}(x, ID_SITE, ID_ENTITY, entity_name, quiet = TRUE)
+\method{snapshot}{MariaDBConnection}(x, ID_ENTITY, ID_SITE, entity_name, site_name, quiet = TRUE)
 
-\method{snapshot}{character}(x, ...)
+\method{snapshot}{character}(x, use_site_name = FALSE, ...)
+
+\method{snapshot}{numeric}(x, use_id_site = FALSE, ...)
 
 \method{snapshot}{tbl_df}(x, ...)
 
@@ -22,7 +25,7 @@ snapshot(x, ...)
 
 \method{snapshot}{data.frame}(x, ...)
 
-\method{snapshot}{default}(x, ID_SITE, ID_ENTITY, entity_name)
+\method{snapshot}{default}(x, ....)
 }
 \arguments{
 \item{x}{This object accepts different classes. If the given object is
@@ -34,13 +37,25 @@ database, included in this package.}
 
 \item{...}{Optional parameters.}
 
-\item{ID_SITE}{Optional, if \code{ID_ENTITY} or \code{entity_name} are provided.}
+\item{ID_ENTITY}{Optional, if \code{ID_SITE}, \code{entity_name} or \code{site_name} are
+provided.}
 
-\item{ID_ENTITY}{Optional, if \code{ID_SITE} or \code{entity_name} are provided.}
+\item{ID_SITE}{Optional, if \code{ID_ENTITY}, \code{entity_name} or \code{site_name} are
+provided.}
 
-\item{entity_name}{Optional, if \code{ID_SITE} or \code{ID_ENTITY} are provided.}
+\item{entity_name}{Optional, if \code{ID_SITE}, \code{ID_ENTITY} or \code{site_name} are
+provided.}
+
+\item{site_name}{Optional, if \code{ID_SITE}, \code{ID_ENTITY} or \code{entity_name} are
+provided.}
 
 \item{quiet}{Boolean flag to indicate if queries should be displayed.}
+
+\item{use_site_name}{Boolean flag to indicate whether to search using
+\code{entity_name} (default) or \code{site_name}, using the values in \code{x}.}
+
+\item{use_id_site}{Boolean flag to indicate whether to search using
+\code{ID_ENTITY} (default) or \code{ID_SITE}, using the values in \code{x}.}
 }
 \value{
 List with the individual tables.
@@ -48,4 +63,40 @@ List with the individual tables.
 \description{
 Create a snapshot of the data linked to entities. Including metadata,
 dates, samples, age models and pollen counts.
+}
+\examples{
+
+\dontrun{
+conn <- dabr::open_conn_mysql(dbname = "SPECIAL-EPD",
+                              password = rstudioapi::askForPassword())
+# Using the entity name
+snp1 <- special.epd::snapshot(conn, entity_name = "MBA3")
+snp1
+
+# Using the site name
+snp2 <- special.epd::snapshot(conn, site_name = "Aammiq")
+snp2
+
+# Using the ID_ENTITY
+snp3 <- special.epd::snapshot(conn, ID_ENTITY = 1)
+snp3
+
+# Using the ID_SITE
+snp4 <- special.epd::snapshot(conn, ID_SITE = 2)
+snp4
+}
+# Using the entity name
+snp1 <- special.epd::snapshot("MBA3")
+snp1
+
+# Using the site name
+snp2 <- special.epd::snapshot("Aammiq", use_site_name = TRUE)
+snp2
+# Using the ID_ENTITY
+snp1 <- special.epd::snapshot(1)
+snp1
+
+# Using the ID_SITE
+snp2 <- special.epd::snapshot(2, use_id_site = TRUE)
+snp2
 }

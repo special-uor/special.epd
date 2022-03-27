@@ -1,5 +1,7 @@
 ---
-output: github_document
+output:
+  rmarkdown::github_document:
+    df_print: kable
 ---
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
@@ -23,7 +25,7 @@ knitr::opts_chunk$set(
 `r badger::badge_cran_release("special.epd", "black")`
 <!-- badges: end -->
 
-The goal of `special.epd` is to provide access to the SPECIAL Research groups's version of the European Pollen Database (EPD).
+The goal of `special.epd` is to provide access to the SPECIAL Research group's version of the European Pollen Database (EPD).
 
 ## Installation
 
@@ -47,6 +49,77 @@ remotes::install_github("special-uor/special.epd", "dev")
 data("entity", package = "special.epd")
 data("date_info", package = "special.epd")
 data("sample", package = "special.epd")
+data("age_model", package = "special.epd")
+data("pollen_count", package = "special.epd")
+```
+
+#### Create snapshot of entities
+##### Using the `entity_name`
+```{r, eval = TRUE}
+special.epd::snapshot("MBA3")
+```
+
+##### Using the `site_name`
+```{r, eval = TRUE}
+special.epd::snapshot("Abant Golu", use_site_name = TRUE)
+```
+
+##### Using the `ID_ENTITY`
+```{r, eval = TRUE}
+special.epd::snapshot(2)
+```
+
+##### Using the `ID_SITE`
+```{r, eval = TRUE}
+special.epd::snapshot(3, use_id_site = TRUE)
+```
+
+##### Extracting multiple records at once
+```{r, eval = TRUE}
+special.epd::snapshot(1:10)
+```
+
+##### Extracting all the records at once
+This will run very slow, so if only few entities are required, it would be better
+to indicate which, based on the previous examples.
+
+```{r, eval = FALSE}
+out <- special.epd::snapshot()
+```
+
+
+## Spatial distribution of the entities
+```{r special-epd, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 6, dpi = 300}
+`%>%` <- special.epd::`%>%`
+special.epd::entity %>%
+  smpds::plot_climate(var = "elevation", units = "m ASL", 
+                      ylim = c(25, 85),
+                      xlim = c(-30, 170))
+```
+
+## Summary of the database
+```{r, cache = TRUE}
+`%>%` <- special.epd::`%>%`
+special_epd_summary <- special.epd::db_summary()
+tibble::tibble(
+    `# Entities` = nrow(special_epd_summary),
+    `with Dates` = sum(special_epd_summary$has_DATES, na.rm = TRUE),
+    `with Age models (using IntCal20)` = sum(special_epd_summary$has_AM, na.rm = TRUE),
+    `with Pollen counts` = sum(special_epd_summary$has_COUNTS, na.rm = TRUE)
+  ) %>%
+  knitr::kable()
+```
+<!-- ## Extract Potential Natural Vegetation -->
+<!-- Using the package `smpds` [https://github.com/special-uor/smpds] we can extract the PNV for each entity and create a plot: -->
+
+```{r pnv, eval = FALSE, echo = FALSE, cache = TRUE, fig.width = 10, fig.height = 6, dpi = 300}
+`%>%` <- special.epd::`%>%`
+special.epd_pnv <- special.epd::entity %>%
+  smpds::extract_biome()
+
+  # smpds::plot_climate(var = "elevation", units = "m ASL", 
+  #                     ylim = c(25, 85),
+  #                     xlim = c(-30, 170))
 ```
 
 ```{r, eval = FALSE, echo = FALSE}
