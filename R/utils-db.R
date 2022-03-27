@@ -1,3 +1,121 @@
+#' Export summary of the database
+#'
+#' @return Tibble with a summary of the database
+#' @export
+db_summary <- function() {
+  special_epd_db_dump <- special.epd::entity$entity_name %>%
+    special.epd::snapshot()
+  special_epd_entities_with_dates <-
+    special_epd_db_dump$date_info %>%
+    dplyr::group_by(ID_ENTITY) %>%
+    dplyr::summarise(n_dates = dplyr::n()) %>%
+    dplyr::left_join(special_epd_db_dump$entity %>%
+                       dplyr::select(1:4),
+                     by = "ID_ENTITY") %>%
+    dplyr::mutate(DATES = TRUE)
+
+  special_epd_entities_with_samples <-
+    special_epd_db_dump$sample %>%
+    dplyr::group_by(ID_ENTITY) %>%
+    dplyr::summarise(n_samples = dplyr::n()) %>%
+    dplyr::left_join(special_epd_db_dump$entity %>%
+                       dplyr::select(1:4),
+                     by = "ID_ENTITY") %>%
+    dplyr::mutate(SAMPLES = TRUE)
+
+  special_epd_entities_with_am <-
+    special_epd_db_dump$age_model %>%
+    dplyr::distinct(ID_SAMPLE) %>%
+    dplyr::left_join(special_epd_db_dump$sample,
+                     by = "ID_SAMPLE") %>%
+    dplyr::group_by(ID_ENTITY) %>%
+    dplyr::summarise(n_am = dplyr::n()) %>%
+    dplyr::left_join(special_epd_db_dump$entity %>%
+                       dplyr::select(1:4),
+                     by = "ID_ENTITY") %>%
+    dplyr::mutate(AM = TRUE)
+
+  special_epd_entities_with_counts_0 <-
+    special_epd_db_dump$pollen_count$clean %>%
+    dplyr::distinct(ID_SAMPLE) %>%
+    dplyr::left_join(special_epd_db_dump$sample,
+                     by = "ID_SAMPLE") %>%
+    dplyr::group_by(ID_ENTITY) %>%
+    dplyr::summarise(n_counts_0 = dplyr::n()) %>%
+    dplyr::left_join(special_epd_db_dump$entity %>%
+                       dplyr::select(1:4),
+                     by = "ID_ENTITY") %>%
+    dplyr::mutate(COUNTS_0 = TRUE)
+  special_epd_entities_with_counts_1 <-
+    special_epd_db_dump$pollen_count$intermediate %>%
+    dplyr::distinct(ID_SAMPLE) %>%
+    dplyr::left_join(special_epd_db_dump$sample,
+                     by = "ID_SAMPLE") %>%
+    dplyr::group_by(ID_ENTITY) %>%
+    dplyr::summarise(n_counts_1 = dplyr::n()) %>%
+    dplyr::left_join(special_epd_db_dump$entity %>%
+                       dplyr::select(1:4),
+                     by = "ID_ENTITY") %>%
+    dplyr::mutate(COUNTS_1 = TRUE)
+  special_epd_entities_with_counts_2 <-
+    special_epd_db_dump$pollen_count$amalgamated %>%
+    dplyr::distinct(ID_SAMPLE) %>%
+    dplyr::left_join(special_epd_db_dump$sample,
+                     by = "ID_SAMPLE") %>%
+    dplyr::group_by(ID_ENTITY) %>%
+    dplyr::summarise(n_counts_2 = dplyr::n()) %>%
+    dplyr::left_join(special_epd_db_dump$entity %>%
+                       dplyr::select(1:4),
+                     by = "ID_ENTITY") %>%
+    dplyr::mutate(COUNTS_2 = TRUE)
+
+  # special_epd_entities_without_am <-
+  #   "~/Downloads/special-epd_entities_without_age_models.xlsx" %>%
+  #   readxl::read_excel(sheet = 1) %>%
+  #   janitor::clean_names() %>%
+  #   dplyr::select(-c(1:7, 9:10))
+
+  special_epd_summary <- special.epd::entity %>%
+    dplyr::select(-site_name) %>%
+    dplyr::left_join(special_epd_entities_with_dates,
+                     by = c("ID_SITE", "ID_ENTITY", "entity_name")) %>%
+    dplyr::left_join(special_epd_entities_with_samples,
+                     by = c("ID_SITE", "ID_ENTITY", "entity_name",
+                            "site_name")) %>%
+    dplyr::left_join(special_epd_entities_with_am,
+                     by = c("ID_SITE", "ID_ENTITY", "entity_name",
+                            "site_name")) %>%
+    dplyr::left_join(special_epd_entities_with_counts_0,
+                     by = c("ID_SITE", "ID_ENTITY", "entity_name",
+                            "site_name")) %>%
+    dplyr::left_join(special_epd_entities_with_counts_1,
+                     by = c("ID_SITE", "ID_ENTITY", "entity_name",
+                            "site_name")) %>%
+    dplyr::left_join(special_epd_entities_with_counts_2,
+                     by = c("ID_SITE", "ID_ENTITY", "entity_name",
+                            "site_name")) %>%
+    dplyr::mutate(has_DATES = ifelse(is.na(DATES), FALSE, DATES),
+                  has_SAMPLES = ifelse(is.na(SAMPLES), FALSE, SAMPLES),
+                  has_AM = ifelse(is.na(AM), FALSE, AM),
+                  COUNTS_0 = ifelse(is.na(COUNTS_0), FALSE, COUNTS_0),
+                  COUNTS_1 = ifelse(is.na(COUNTS_1), FALSE, COUNTS_1),
+                  COUNTS_2 = ifelse(is.na(COUNTS_2), FALSE, COUNTS_2),
+                  has_COUNTS = COUNTS_0 & COUNTS_1 & COUNTS_2) %>%
+    # dplyr::left_join(special_epd_entities_without_am) %>%
+    dplyr::mutate(n_counts = list(n_counts_0, n_counts_1, n_counts_2) %>%
+                    purrr::pmap_dbl(function(n_counts_0,
+                                             n_counts_1,
+                                             n_counts_2) {
+                      unique(c(n_counts_0, n_counts_1, n_counts_2))
+                    })) %>%
+    dplyr::relocate(n_dates, n_samples, n_am, n_counts,
+                    .before = has_DATES) %>%
+    dplyr::relocate(site_name, .before = entity_name) # %>%
+    # dplyr::select(-DATES, -SAMPLES, -AM, -COUNTS_0, -COUNTS_1, -COUNTS_2) %>%
+    # dplyr::select(-n_counts_0, -n_counts_1, -n_counts_2)
+  special_epd_summary
+}
+
 get_links <- function(conn, ID_ENTITY) {
   conn %>%
     dabr::select("SELECT * FROM external_link WHERE ID_ENTITY = ", ID_ENTITY)
@@ -220,11 +338,9 @@ snapshot.data.frame <- function(x, ...) {
 
 #' @rdname snapshot
 #' @export
-snapshot.default <- function(x,
-                             ID_SITE,
-                             ID_ENTITY,
-                             entity_name) {
-  message("Calling default snapshot...")
+snapshot.default <- function(x, ....) {
+  special.epd::entity$entity_name %>%
+    snapshot()
 }
 
 #' @keywords internal
