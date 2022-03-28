@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SPECIAL research group's version of the European Pollen Database (EPD) • special.epd</title>
+<title>SPECIAL Research Group's Version of the European Pollen Database (EPD) • special.epd</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
 <script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
-<script src="pkgdown.js"></script><meta property="og:title" content="SPECIAL research group's version of the European Pollen Database (EPD)">
+<script src="pkgdown.js"></script><meta property="og:title" content="SPECIAL Research Group's Version of the European Pollen Database (EPD)">
 <meta property="og:description" content="This is a data package to provide access to records from the
     European Pollen Database (EPD), that have been checked by members of the
     SPECIAL reseach group. We have added age models using `rbacon` for each
@@ -36,7 +36,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">special.epd</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0.9000</span>
       </span>
     </div>
 
@@ -59,7 +59,7 @@
       </header><div class="row">
   <div class="contents col-md-9">
 <div class="section level1">
-<div class="page-header"><h1 id="specialepd-special-research-groups-version-of-the-european-pollen-database-epd">special.epd: SPECIAL Research group’s version of the European Pollen Database (EPD)<a class="anchor" aria-label="anchor" href="#specialepd-special-research-groups-version-of-the-european-pollen-database-epd"></a>
+<div class="page-header"><h1 id="specialepd-special-research-groups-version-of-the-european-pollen-database-epd">special.epd: SPECIAL Research Group’s Version of the European Pollen Database (EPD)<a class="anchor" aria-label="anchor" href="#specialepd-special-research-groups-version-of-the-european-pollen-database-epd"></a>
 </h1></div>
 <!-- S<sub>PECIAL</sub> <sub>R</sub>e<sub>search group's version of the</sub> E<sub>uropean</sub> Po<sub>llen</sub> D<sub>atabase (EPD)</sub>  -->
 <!-- *S*PECIAL R*e*search group's version of the *E*uropean *Po*llen *D*atabase (EPD)  -->
@@ -71,7 +71,7 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can(not) install the released version of <code>special.epd</code> from <a href="https://CRAN.R-project.org" class="external-link">CRAN</a> with:</p>
+<p>You <strong>can(not)</strong> install the released version of <code>special.epd</code> from <a href="https://CRAN.R-project.org" class="external-link">CRAN</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"special.epd"</span><span class="op">)</span></code></pre></div>
 <p>And the development version from <a href="https://github.com/special-uor/special.epd" class="external-link">GitHub</a> with:</p>
@@ -93,13 +93,42 @@
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"pollen_count"</span>, package <span class="op">=</span> <span class="st">"special.epd"</span><span class="op">)</span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="create-snapshot-of-entities">Create snapshot of entities<a class="anchor" aria-label="anchor" href="#create-snapshot-of-entities"></a>
+<h4 id="create-a-snapshot-of-entities">Create a snapshot of entities<a class="anchor" aria-label="anchor" href="#create-a-snapshot-of-entities"></a>
 </h4>
+<p>The function <code><a href="reference/snapshot.html">special.epd::snapshot</a></code> takes few different parameters and based on the first one, <code>x</code>, it returns a variety of snapshots.</p>
+<p>This function returns a list with 5 components:</p>
+<ul>
+<li>
+<code>entity</code>: data frame (<code>tibble</code> object) with the metadata associated to the entities.</li>
+<li>
+<code>date_info</code>: data frame (<code>tibble</code> object) with the dating information. This one can be linked to the <code>entity</code> table using the column called <code>ID_ENTITY</code>.</li>
+<li>
+<code>sample</code>: data frame (<code>tibble</code> object) with the sampling information. This one can be linked to the <code>entity</code> table using the column called <code>ID_ENTITY</code>.</li>
+<li>
+<code>age_model</code>: : data frame (<code>tibble</code> object) with the “new” age models (created with <a href="https://github.com/special-uor/ageR" class="external-link"><strong>ageR</strong></a>). This one can be linked to the <code>sample</code> table using the column called <code>ID_SAMPLE</code>.</li>
+<li>
+<code>pollen_count</code>: list of data frames (<code>tibble</code> objects) containing the pollen counts for 3 levels of “amalgamation”:
+<ul>
+<li><code>clean</code></li>
+<li><code>intermediate</code></li>
+<li><code>amalgamated</code></li>
+</ul>
+All these data frames can be linked to the <code>sample</code> table using the column called <code>ID_SAMPLE</code>.</li>
+</ul>
+<p><span class="emoji" data-emoji="warning">⚠️</span> <strong>NOTE:</strong> the ouput is returned “invisibly”, so you should assign the output of the function to a variable.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span>
+<span class="va">output</span><span class="op">$</span><span class="va">entity</span>
+<span class="va">output</span><span class="op">$</span><span class="va">date_info</span>
+<span class="va">output</span><span class="op">$</span><span class="va">sample</span>
+<span class="va">output</span><span class="op">$</span><span class="va">pollen_count</span><span class="op">$</span><span class="va">clean</span>
+<span class="va">output</span><span class="op">$</span><span class="va">pollen_count</span><span class="op">$</span><span class="va">intermediate</span>
+<span class="va">output</span><span class="op">$</span><span class="va">pollen_count</span><span class="op">$</span><span class="va">intermediate</span></code></pre></div>
 <div class="section level5">
 <h5 id="using-the-entity_name">Using the <code>entity_name</code>
 <a class="anchor" aria-label="anchor" href="#using-the-entity_name"></a>
 </h5>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="st">"MBA3"</span><span class="op">)</span>
 <span class="co">#&gt; # A tibble: 1 × 8</span>
 <span class="co">#&gt;   ID_SITE ID_ENTITY site_name    entity_name dates samples age_model</span>
@@ -111,7 +140,7 @@
 <h5 id="using-the-site_name">Using the <code>site_name</code>
 <a class="anchor" aria-label="anchor" href="#using-the-site_name"></a>
 </h5>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="st">"Abant Golu"</span>, use_site_name <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="co">#&gt; # A tibble: 1 × 8</span>
 <span class="co">#&gt;   ID_SITE ID_ENTITY site_name  entity_name dates samples age_model</span>
@@ -123,7 +152,7 @@
 <h5 id="using-the-id_entity">Using the <code>ID_ENTITY</code>
 <a class="anchor" aria-label="anchor" href="#using-the-id_entity"></a>
 </h5>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>
 <span class="co">#&gt; # A tibble: 1 × 8</span>
 <span class="co">#&gt;   ID_SITE ID_ENTITY site_name entity_name dates samples age_model</span>
@@ -135,7 +164,7 @@
 <h5 id="using-the-id_site">Using the <code>ID_SITE</code>
 <a class="anchor" aria-label="anchor" href="#using-the-id_site"></a>
 </h5>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="fl">3</span>, use_id_site <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
 <span class="co">#&gt; # A tibble: 1 × 8</span>
 <span class="co">#&gt;   ID_SITE ID_ENTITY site_name        entity_name dates samples age_model</span>
@@ -146,7 +175,7 @@
 <div class="section level5">
 <h5 id="extracting-multiple-records-at-once">Extracting multiple records at once<a class="anchor" aria-label="anchor" href="#extracting-multiple-records-at-once"></a>
 </h5>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span>
 <span class="co">#&gt; # A tibble: 10 × 8</span>
 <span class="co">#&gt;    ID_SITE ID_ENTITY site_name          entity_name dates samples age_model</span>
@@ -167,8 +196,67 @@
 <h5 id="extracting-all-the-records-at-once">Extracting all the records at once<a class="anchor" aria-label="anchor" href="#extracting-all-the-records-at-once"></a>
 </h5>
 <p>This will run very slow, so if only few entities are required, it would be better to indicate which, based on the previous examples.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+</div>
+</div>
+<div class="section level4">
+<h4 id="export-data-as-individual-csv-files">Export data as individual CSV files<a class="anchor" aria-label="anchor" href="#export-data-as-individual-csv-files"></a>
+</h4>
+<p>The function <code><a href="reference/write_csvs.html">special.epd::write_csvs</a></code> takes to parameters:</p>
+<ul>
+<li>
+<code>.data</code>: a list of class <code>snapshot</code>, this one can be generated using the function <code><a href="reference/snapshot.html">special.epd::snapshot</a></code> (see previous section).</li>
+<li>
+<code>prefix</code>: a prefix name to be included in each individual files, this prefix can include a relative or absolute path to a directory in the local machine.</li>
+</ul>
+<div class="section level5">
+<h5 id="without-a-path">Without a path<a class="anchor" aria-label="anchor" href="#without-a-path"></a>
+</h5>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
+<span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="st">"MBA3"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/write_csvs.html">write_csvs</a></span><span class="op">(</span>prefix <span class="op">=</span> <span class="st">"MBA3"</span><span class="op">)</span>
+<span class="co">#&gt; # A tibble: 1 × 8</span>
+<span class="co">#&gt;   ID_SITE ID_ENTITY site_name    entity_name dates samples age_model</span>
+<span class="co">#&gt;     &lt;int&gt;     &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;       &lt;int&gt;   &lt;int&gt;     &lt;int&gt;</span>
+<span class="co">#&gt; 1       1         1 Aalkistensee MBA3            7      57        57</span>
+<span class="co">#&gt; # … with 1 more variable: pollen_counts &lt;tibble[,3]&gt;</span></code></pre></div>
+<div class="section level6">
+<h6 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a>
+</h6>
+<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co">#&gt;                                 levelName</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; 1 .                                      </span></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="co">#&gt; 2  ¦--MBA3_age_model.csv                 </span></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt; 3  ¦--MBA3_dates.csv                     </span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; 4  ¦--MBA3_metadata.csv                  </span></span>
+<span id="cb12-6"><a href="#cb12-6"></a><span class="co">#&gt; 5  ¦--MBA3_pollen_counts_amalgamated.csv </span></span>
+<span id="cb12-7"><a href="#cb12-7"></a><span class="co">#&gt; 6  ¦--MBA3_pollen_counts_clean.csv       </span></span>
+<span id="cb12-8"><a href="#cb12-8"></a><span class="co">#&gt; 7  ¦--MBA3_pollen_counts_intermediate.csv</span></span>
+<span id="cb12-9"><a href="#cb12-9"></a><span class="co">#&gt; 8  °--MBA3_samples.csv</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level5">
+<h5 id="including-a-path">Including a path<a class="anchor" aria-label="anchor" href="#including-a-path"></a>
+</h5>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
+<span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="st">"MBA3"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/write_csvs.html">write_csvs</a></span><span class="op">(</span>prefix <span class="op">=</span> <span class="st">"/special.uor/epd/MBA3"</span><span class="op">)</span></code></pre></div>
+<div class="section level6">
+<h6 id="output-1">Output<a class="anchor" aria-label="anchor" href="#output-1"></a>
+</h6>
+<div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co">#&gt;                                     levelName</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="co">#&gt; 1 special.uor                                </span></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="co">#&gt; 2  °--epd                                    </span></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="co">#&gt; 3      ¦--MBA3_age_model.csv                 </span></span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="co">#&gt; 4      ¦--MBA3_dates.csv                     </span></span>
+<span id="cb14-6"><a href="#cb14-6"></a><span class="co">#&gt; 5      ¦--MBA3_metadata.csv                  </span></span>
+<span id="cb14-7"><a href="#cb14-7"></a><span class="co">#&gt; 6      ¦--MBA3_pollen_counts_amalgamated.csv </span></span>
+<span id="cb14-8"><a href="#cb14-8"></a><span class="co">#&gt; 7      ¦--MBA3_pollen_counts_clean.csv       </span></span>
+<span id="cb14-9"><a href="#cb14-9"></a><span class="co">#&gt; 8      ¦--MBA3_pollen_counts_intermediate.csv</span></span>
+<span id="cb14-10"><a href="#cb14-10"></a><span class="co">#&gt; 9      °--MBA3_samples.csv</span></span></code></pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -180,7 +268,7 @@
 <div class="section level2">
 <h2 id="summary-of-the-database">Summary of the database<a class="anchor" aria-label="anchor" href="#summary-of-the-database"></a>
 </h2>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
 <span class="va">special_epd_summary</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/db_summary.html">db_summary</a></span><span class="op">(</span><span class="op">)</span>
 <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>
@@ -201,7 +289,7 @@
 <td align="right">1667</td>
 <td align="right">1667</td>
 <td align="right">1476</td>
-<td align="right">1636</td>
+<td align="right">1667</td>
 </tr></tbody>
 </table>
 <!-- ## Extract Potential Natural Vegetation --><!-- Using the package `smpds` [https://github.com/special-uor/smpds] we can extract the PNV for each entity and create a plot: -->
@@ -237,7 +325,7 @@
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/special-uor/special.epd" class="external-link"><img src="https://img.shields.io/badge/devel%20version-0.0.0.9000-yellow.svg"></a></li>
+<li><a href="https://github.com/special-uor/special.epd" class="external-link"><img src="https://img.shields.io/badge/devel%20version-1.0.0.9000-yellow.svg"></a></li>
 <li><a href="https://github.com/special-uor/special.epd/actions" class="external-link"><img src="https://github.com/special-uor/special.epd/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
 <li><a href="https://cran.r-project.org/package=special.epd" class="external-link"><img src="https://www.r-pkg.org/badges/version/special.epd?color=black"></a></li>
 </ul>
