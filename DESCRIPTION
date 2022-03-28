@@ -1,5 +1,5 @@
 Package: special.epd
-Title: SPECIAL Research Group's version of the European Pollen Database (EPD)
+Title: SPECIAL Research Group's Version of the European Pollen Database (EPD)
 Version: 1.0.0.9000
 Authors@R: c(
     person(given = "Roberto",

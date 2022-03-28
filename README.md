@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# special.epd: SPECIAL Research group’s version of the European Pollen Database (EPD)
+# special.epd: SPECIAL Research Group’s Version of the European Pollen Database (EPD)
 
 <!-- S<sub>PECIAL</sub> <sub>R</sub>e<sub>search group's version of the</sub> E<sub>uropean</sub> Po<sub>llen</sub> D<sub>atabase (EPD)</sub>  -->
 <!-- *S*PECIAL R*e*search group's version of the *E*uropean *Po*llen *D*atabase (EPD)  -->
@@ -206,15 +206,16 @@ special.epd::snapshot("MBA3") %>%
 
 ###### Output
 
-    #>                                    levelName
-    #> 1 special.uor                               
-    #> 2  ¦--epdMBA3_age_model.csv                 
-    #> 3  ¦--epdMBA3_dates.csv                     
-    #> 4  ¦--epdMBA3_metadata.csv                  
-    #> 5  ¦--epdMBA3_pollen_counts_amalgamated.csv 
-    #> 6  ¦--epdMBA3_pollen_counts_clean.csv       
-    #> 7  ¦--epdMBA3_pollen_counts_intermediate.csv
-    #> 8  °--epdMBA3_samples.csv
+    #>                                     levelName
+    #> 1 special.uor                                
+    #> 2  °--epd                                    
+    #> 3      ¦--MBA3_age_model.csv                 
+    #> 4      ¦--MBA3_dates.csv                     
+    #> 5      ¦--MBA3_metadata.csv                  
+    #> 6      ¦--MBA3_pollen_counts_amalgamated.csv 
+    #> 7      ¦--MBA3_pollen_counts_clean.csv       
+    #> 8      ¦--MBA3_pollen_counts_intermediate.csv
+    #> 9      °--MBA3_samples.csv
 
 ## Spatial distribution of the entities
 

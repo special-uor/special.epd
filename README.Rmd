@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# special.epd: SPECIAL Research group's version of the European Pollen Database (EPD)
+# special.epd: SPECIAL Research Group's Version of the European Pollen Database (EPD)
 <!-- S<sub>PECIAL</sub> <sub>R</sub>e<sub>search group's version of the</sub> E<sub>uropean</sub> Po<sub>llen</sub> D<sub>atabase (EPD)</sub>  -->
 <!-- *S*PECIAL R*e*search group's version of the *E*uropean *Po*llen *D*atabase (EPD)  -->
 <!-- **S**PECIAL R**e**search group's version of the **E**uropean **Po**llen **D**atabase (EPD)  -->
@@ -151,7 +151,7 @@ special.epd::snapshot("MBA3") %>%
 ###### Output
 ```{r, echo = FALSE}
 paths <- list.files(pattern = "MBA3", full.names = TRUE) %>%
-  stringr::str_replace_all("./", "/special.uor/epd")
+  stringr::str_replace_all("./", "/special.uor/epd/")
 tree <- data.tree::as.Node(data.frame(pathString = paths))
 data.tree::SetGraphStyle(tree, rankdir = "TB")
 data.tree::SetNodeStyle(tree,
