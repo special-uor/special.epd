@@ -1,7 +1,7 @@
 special_epd <- dabr::select_all(conn, "entity")
-
-special_epd_db_dump <- conn %>%
-  special.epd::snapshot(entity_name = special_epd$entity_name)
+`%>%` <- special.epd::`%>%`
+special_epd_db_dump <- special.epd::snapshot() %>%
+  special.epd::write_csvs(paste0("~/Downloads/special_epd_", Sys.Date()))
 special_epd_entities_with_dates <-
   special_epd_db_dump$date_info %>%
   dplyr::group_by(ID_ENTITY) %>%
@@ -74,7 +74,7 @@ special_epd_entities_without_am <-
   janitor::clean_names() %>%
   dplyr::select(-c(1:7, 9:10))
 
-special_epd_summary <- special_epd %>%
+special_epd_summary <- special_epd_db_dump$entity %>%
   dplyr::select(-site_name) %>%
   dplyr::left_join(special_epd_entities_with_dates) %>%
   dplyr::left_join(special_epd_entities_with_samples) %>%

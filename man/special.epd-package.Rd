@@ -4,7 +4,7 @@
 \name{special.epd-package}
 \alias{special.epd}
 \alias{special.epd-package}
-\title{special.epd: SPECIAL research group's version of the European Pollen Database (EPD)}
+\title{special.epd: SPECIAL Research Group's version of the European Pollen Database (EPD)}
 \description{
 This is a data package to provide access to records from the European Pollen Database (EPD), that have been checked by members of the SPECIAL reseach group. We have added age models using `rbacon` for each entity/core.
 }

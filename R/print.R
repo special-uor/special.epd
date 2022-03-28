@@ -6,6 +6,10 @@
 NULL
 
 #' Print Values
+#' @param x an object used to select a method.
+#' @param stats_only Boolean flag to indicate whether to show the summary
+#'     only (default).
+#' @param ... further arguments passed to or from other methods.
 #' @rdname print
 #' @export
 print.snapshot <- function(x, stats_only = TRUE, ...) {
@@ -16,6 +20,8 @@ print.snapshot <- function(x, stats_only = TRUE, ...) {
 
 #' @keywords internal
 extract_element <- function(x, element_name, IDs, ID_ENTITY = TRUE) {
+  # Local binding
+  ID_SAMPLE <- NULL
   tryCatch({
     data <- x %>%
       purrr::pluck(element_name)
@@ -33,6 +39,9 @@ extract_element <- function(x, element_name, IDs, ID_ENTITY = TRUE) {
 
 #' @keywords internal
 print_stats <- function(x) {
+  # Local bindings
+  ID_ENTITY <- ID_SITE <- entity_name <- site_name <- NULL
+
   tables <- names(x)
   id_entities <- unique(x$entity$ID_ENTITY)
   stats <- id_entities %>%

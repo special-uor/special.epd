@@ -3,6 +3,12 @@
 #' @return Tibble with a summary of the database
 #' @export
 db_summary <- function() {
+  # Local bindings
+  AM <- COUNTS_0 <- COUNTS_1 <- COUNTS_2 <- DATES <- ID_ENTITY <- NULL
+  ID_SAMPLE <- SAMPLES <- entity_name <- has_DATES <- NULL
+  n_am <- n_counts <- n_counts_0 <- n_counts_1 <- n_counts_2 <- n_dates <- NULL
+  n_samples <- site_name <- NULL
+
   special_epd_db_dump <- special.epd::entity$entity_name %>%
     special.epd::snapshot()
   special_epd_entities_with_dates <-
@@ -188,6 +194,7 @@ snapshot <- function(x, ...) {
 #' snp4
 #' }
 snapshot.MariaDBConnection <- function(x,
+                                       ...,
                                        ID_ENTITY,
                                        ID_SITE,
                                        entity_name,
@@ -220,10 +227,10 @@ snapshot.MariaDBConnection <- function(x,
 #' # Using the site name
 #' snp2 <- special.epd::snapshot("Aammiq", use_site_name = TRUE)
 #' snp2
-snapshot.character <- function(x, use_site_name = FALSE, ...) {
+snapshot.character <- function(x, ..., use_site_name = FALSE) {
   # Local bindings
-  . <- amalgamation_level <- count <- taxon_name <- NULL
-  ID_SAMPLE <- ID_SAMPLE <- ID_TAXON <- NULL
+  . <- amalgamation_level <- count <- entity_name <- site_name <- NULL
+  taxon_name <- ID_ENTITY <- ID_SAMPLE <- ID_TAXON <- NULL
 
   # dot_params <- list(...)
   # if (!("entity_name" %in% names(dot_params))) {
@@ -302,7 +309,9 @@ snapshot.character <- function(x, use_site_name = FALSE, ...) {
 #' # Using the ID_SITE
 #' snp2 <- special.epd::snapshot(2, use_id_site = TRUE)
 #' snp2
-snapshot.numeric <- function(x, use_id_site = FALSE, ...) {
+snapshot.numeric <- function(x, ..., use_id_site = FALSE) {
+  # Local bindings
+  ID_ENTITY <- ID_SITE <- NULL
   if (use_id_site) {
     entity_tb <- special.epd::entity %>%
       dplyr::filter(ID_SITE %in% x)
@@ -338,7 +347,7 @@ snapshot.data.frame <- function(x, ...) {
 
 #' @rdname snapshot
 #' @export
-snapshot.default <- function(x, ....) {
+snapshot.default <- function(x, ...) {
   special.epd::entity$entity_name %>%
     snapshot()
 }
@@ -506,7 +515,7 @@ snapshot.default <- function(x, ....) {
 #' @return Invisibly returns the input DB snapshot.
 #' @export
 write_csvs <- function(.data, prefix) {
-  if (!("special.epd" %in% class(.data)))
+  if (!("snapshot" %in% class(.data)))
     stop("The given object does not look like a valid snapshot from the ",
          "`SPECIAL-EPD database. Try using the function `snapshot` first.",
          call. = FALSE)

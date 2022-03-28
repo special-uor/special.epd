@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# special.epd: SPECIAL Research group’s version of the European Pollen Database (EPD)
+# special.epd: SPECIAL Research Group’s Version of the European Pollen Database (EPD)
 
 <!-- S<sub>PECIAL</sub> <sub>R</sub>e<sub>search group's version of the</sub> E<sub>uropean</sub> Po<sub>llen</sub> D<sub>atabase (EPD)</sub>  -->
 <!-- *S*PECIAL R*e*search group's version of the *E*uropean *Po*llen *D*atabase (EPD)  -->
@@ -9,7 +9,7 @@
 <!-- <img src="inst/images/logo.png" alt="logo" align="right" height=200px/> -->
 <!-- badges: start -->
 
-[![](https://img.shields.io/badge/devel%20version-0.0.0.9000-yellow.svg)](https://github.com/special-uor/special.epd)
+[![](https://img.shields.io/badge/devel%20version-1.0.0.9000-yellow.svg)](https://github.com/special-uor/special.epd)
 [![R build
 status](https://github.com/special-uor/special.epd/workflows/R-CMD-check/badge.svg)](https://github.com/special-uor/special.epd/actions)
 [![](https://www.r-pkg.org/badges/version/special.epd?color=black)](https://cran.r-project.org/package=special.epd)
@@ -20,7 +20,7 @@ group’s version of the European Pollen Database (EPD).
 
 ## Installation
 
-You can(not) install the released version of `special.epd` from
+You **can(not)** install the released version of `special.epd` from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
@@ -47,7 +47,46 @@ data("age_model", package = "special.epd")
 data("pollen_count", package = "special.epd")
 ```
 
-#### Create snapshot of entities
+#### Create a snapshot of entities
+
+The function `special.epd::snapshot` takes few different parameters and
+based on the first one, `x`, it returns a variety of snapshots.
+
+This function returns a list with 5 components:
+
+-   `entity`: data frame (`tibble` object) with the metadata associated
+    to the entities.
+-   `date_info`: data frame (`tibble` object) with the dating
+    information. This one can be linked to the `entity` table using the
+    column called `ID_ENTITY`.
+-   `sample`: data frame (`tibble` object) with the sampling
+    information. This one can be linked to the `entity` table using the
+    column called `ID_ENTITY`.
+-   `age_model`: : data frame (`tibble` object) with the “new” age
+    models (created with
+    [**ageR**](https://github.com/special-uor/ageR)). This one can be
+    linked to the `sample` table using the column called `ID_SAMPLE`.
+-   `pollen_count`: list of data frames (`tibble` objects) containing
+    the pollen counts for 3 levels of “amalgamation”:
+    -   `clean`
+    -   `intermediate`
+    -   `amalgamated`
+
+    All these data frames can be linked to the `sample` table using the
+    column called `ID_SAMPLE`.
+
+:warning: **NOTE:** the ouput is returned “invisibly”, so you should
+assign the output of the function to a variable.
+
+``` r
+output <- special.epd::snapshot(...)
+output$entity
+output$date_info
+output$sample
+output$pollen_count$clean
+output$pollen_count$intermediate
+output$pollen_count$intermediate
+```
 
 ##### Using the `entity_name`
 
@@ -122,6 +161,62 @@ be better to indicate which, based on the previous examples.
 out <- special.epd::snapshot()
 ```
 
+#### Export data as individual CSV files
+
+The function `special.epd::write_csvs` takes to parameters:
+
+-   `.data`: a list of class `snapshot`, this one can be generated using
+    the function `special.epd::snapshot` (see previous section).
+-   `prefix`: a prefix name to be included in each individual files,
+    this prefix can include a relative or absolute path to a directory
+    in the local machine.
+
+##### Without a path
+
+``` r
+`%>%` <- special.epd::`%>%`
+special.epd::snapshot("MBA3") %>%
+  special.epd::write_csvs(prefix = "MBA3")
+#> # A tibble: 1 × 8
+#>   ID_SITE ID_ENTITY site_name    entity_name dates samples age_model
+#>     <int>     <int> <chr>        <chr>       <int>   <int>     <int>
+#> 1       1         1 Aalkistensee MBA3            7      57        57
+#> # … with 1 more variable: pollen_counts <tibble[,3]>
+```
+
+###### Output
+
+    #>                                 levelName
+    #> 1 .                                      
+    #> 2  ¦--MBA3_age_model.csv                 
+    #> 3  ¦--MBA3_dates.csv                     
+    #> 4  ¦--MBA3_metadata.csv                  
+    #> 5  ¦--MBA3_pollen_counts_amalgamated.csv 
+    #> 6  ¦--MBA3_pollen_counts_clean.csv       
+    #> 7  ¦--MBA3_pollen_counts_intermediate.csv
+    #> 8  °--MBA3_samples.csv
+
+##### Including a path
+
+``` r
+`%>%` <- special.epd::`%>%`
+special.epd::snapshot("MBA3") %>%
+  special.epd::write_csvs(prefix = "/special.uor/epd/MBA3")
+```
+
+###### Output
+
+    #>                                     levelName
+    #> 1 special.uor                                
+    #> 2  °--epd                                    
+    #> 3      ¦--MBA3_age_model.csv                 
+    #> 4      ¦--MBA3_dates.csv                     
+    #> 5      ¦--MBA3_metadata.csv                  
+    #> 6      ¦--MBA3_pollen_counts_amalgamated.csv 
+    #> 7      ¦--MBA3_pollen_counts_clean.csv       
+    #> 8      ¦--MBA3_pollen_counts_intermediate.csv
+    #> 9      °--MBA3_samples.csv
+
 ## Spatial distribution of the entities
 
 <img src="man/figures/README-special-epd-1.png" width="100%" />
@@ -142,7 +237,7 @@ tibble::tibble(
 
 | # Entities | with Dates | with Age models (using IntCal20) | with Pollen counts |
 |-----------:|-----------:|---------------------------------:|-------------------:|
-|       1667 |       1667 |                             1476 |               1636 |
+|       1667 |       1667 |                             1476 |               1667 |
 
 <!-- ## Extract Potential Natural Vegetation -->
 <!-- Using the package `smpds` [https://github.com/special-uor/smpds] we can extract the PNV for each entity and create a plot: -->
