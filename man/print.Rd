@@ -6,6 +6,14 @@
 \usage{
 \method{print}{snapshot}(x, stats_only = TRUE, ...)
 }
+\arguments{
+\item{x}{an object used to select a method.}
+
+\item{stats_only}{Boolean flag to indicate whether to show the summary
+only (default).}
+
+\item{...}{further arguments passed to or from other methods.}
+}
 \description{
 Print Values
 }

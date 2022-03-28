@@ -13,11 +13,11 @@
 \usage{
 snapshot(x, ...)
 
-\method{snapshot}{MariaDBConnection}(x, ID_ENTITY, ID_SITE, entity_name, site_name, quiet = TRUE)
+\method{snapshot}{MariaDBConnection}(x, ..., ID_ENTITY, ID_SITE, entity_name, site_name, quiet = TRUE)
 
-\method{snapshot}{character}(x, use_site_name = FALSE, ...)
+\method{snapshot}{character}(x, ..., use_site_name = FALSE)
 
-\method{snapshot}{numeric}(x, use_id_site = FALSE, ...)
+\method{snapshot}{numeric}(x, ..., use_id_site = FALSE)
 
 \method{snapshot}{tbl_df}(x, ...)
 
@@ -25,7 +25,7 @@ snapshot(x, ...)
 
 \method{snapshot}{data.frame}(x, ...)
 
-\method{snapshot}{default}(x, ....)
+\method{snapshot}{default}(x, ...)
 }
 \arguments{
 \item{x}{This object accepts different classes. If the given object is
