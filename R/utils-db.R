@@ -506,7 +506,7 @@ snapshot.default <- function(x, ....) {
 #' @return Invisibly returns the input DB snapshot.
 #' @export
 write_csvs <- function(.data, prefix) {
-  if (!("special.epd" %in% class(.data)))
+  if (!("snapshot" %in% class(.data)))
     stop("The given object does not look like a valid snapshot from the ",
          "`SPECIAL-EPD database. Try using the function `snapshot` first.",
          call. = FALSE)
