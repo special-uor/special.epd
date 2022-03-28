@@ -29,7 +29,7 @@ The goal of `special.epd` is to provide access to the SPECIAL Research group's v
 
 ## Installation
 
-You can(not) install the released version of `special.epd` from [CRAN](https://CRAN.R-project.org) with:
+You **can(not)** install the released version of `special.epd` from [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
 install.packages("special.epd")
@@ -53,7 +53,36 @@ data("age_model", package = "special.epd")
 data("pollen_count", package = "special.epd")
 ```
 
-#### Create snapshot of entities
+#### Create a snapshot of entities
+
+The function `special.epd::snapshot` takes few different parameters and based on
+the first one, `x`, it returns a variety of snapshots. 
+
+This function returns a list with 5 components:
+
+- `entity`: data frame (`tibble` object) with the metadata associated to the entities.
+- `date_info`: data frame (`tibble` object) with the dating information. This one can be linked to the `entity` table using the column called `ID_ENTITY`.
+- `sample`: data frame (`tibble` object) with the sampling information. This one can be linked to the `entity` table using the column called `ID_ENTITY`.
+- `age_model`: : data frame (`tibble` object) with the "new" age models (created with [**ageR**](https://github.com/special-uor/ageR)). This one can be linked to the `sample` table using the column called `ID_SAMPLE`.
+- `pollen_count`: list of data frames (`tibble` objects) containing the pollen counts for 3 levels of "amalgamation":
+    - `clean`
+    - `intermediate`
+    - `amalgamated`
+    
+  All these data frames can be linked to the `sample` table using the column called `ID_SAMPLE`.
+
+:warning: **NOTE:** the ouput is returned "invisibly", so you should assign the output of the function to a variable.
+
+```{r, eval = FALSE}
+output <- special.epd::snapshot(...)
+output$entity
+output$date_info
+output$sample
+output$pollen_count$clean
+output$pollen_count$intermediate
+output$pollen_count$intermediate
+```
+
 ##### Using the `entity_name`
 ```{r, eval = TRUE}
 special.epd::snapshot("MBA3")
@@ -85,6 +114,55 @@ to indicate which, based on the previous examples.
 
 ```{r, eval = FALSE}
 out <- special.epd::snapshot()
+```
+
+#### Export data as individual CSV files
+
+The function `special.epd::write_csvs` takes to parameters:
+
+- `.data`: a list of class `snapshot`, this one can be generated using the function `special.epd::snapshot` (see previous section).
+- `prefix`: a prefix name to be included in each individual files, this prefix can include a relative or absolute path to a directory in the local machine.
+
+##### Without a path
+```{r, eval = TRUE}
+`%>%` <- special.epd::`%>%`
+special.epd::snapshot("MBA3") %>%
+  special.epd::write_csvs(prefix = "MBA3")
+```
+
+###### Output
+```{r, echo = FALSE}
+paths <- list.files(pattern = "MBA3", full.names = TRUE)
+tree <- data.tree::as.Node(data.frame(pathString = paths))
+data.tree::SetGraphStyle(tree, rankdir = "TB")
+data.tree::SetNodeStyle(tree,
+                        style = "filled,rounded",
+                        shape = "box")
+print(tree)
+```
+
+##### Including a path
+```{r, eval = FALSE}
+`%>%` <- special.epd::`%>%`
+special.epd::snapshot("MBA3") %>%
+  special.epd::write_csvs(prefix = "/special.uor/epd/MBA3")
+```
+
+###### Output
+```{r, echo = FALSE}
+paths <- list.files(pattern = "MBA3", full.names = TRUE) %>%
+  stringr::str_replace_all("./", "/special.uor/epd")
+tree <- data.tree::as.Node(data.frame(pathString = paths))
+data.tree::SetGraphStyle(tree, rankdir = "TB")
+data.tree::SetNodeStyle(tree,
+                        style = "filled,rounded",
+                        shape = "box")
+print(tree)
+```
+
+```{r, eval = TRUE, echo = FALSE}
+paths <- list.files(pattern = "MBA3", full.names = TRUE)
+unlink(paths)
 ```
 
 
