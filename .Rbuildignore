@@ -2,9 +2,11 @@
 ^\.Rproj\.user$
 ^LICENSE\.md$
 ^data-raw$
-^\.R\.ignore$
+^R\.ignore$
 ^inst$
 ^README\.Rmd$
 ^data/EPD$
 ^data/IBERIA$
 ^\.github$
+^README_cache$
+^docs$
