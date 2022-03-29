@@ -341,7 +341,17 @@ snapshot.tbl <- function(x, ...) {
 #' @rdname snapshot
 #' @export
 snapshot.data.frame <- function(x, ...) {
-  message("Calling data.frame snapshot...")
+  # Extract column's names of the input data frame
+  names <- colnames(x)
+  if ("ID_ENTITY" %in% names) {
+    return(snapshot(x$ID_ENTITY))
+  } else if ("ID_SITE" %in% names) {
+    return(snapshot(x$ID_SITE, use_id_site = TRUE))
+  } else if ("entity_name" %in% names) {
+    return(snapshot(x$entity_name))
+  } else if ("site_name" %in% names) {
+    return(snapshot(x$site_name, use_site_name = TRUE))
+  }
 }
 
 
