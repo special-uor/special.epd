@@ -340,6 +340,21 @@ snapshot.tbl <- function(x, ...) {
 
 #' @rdname snapshot
 #' @export
+#'
+#' @examples
+#' # Using the entity table
+#' `%>%` <- magrittr::`%>%`
+#' snp1 <- special.epd::entity %>%
+#'   dplyr::slice(1) %>%
+#'   special.epd::snapshot("MBA3")
+#' snp1
+#'
+#' # Using a custom data frame (`tibble` object) with site names
+#' snp2 <- tibble::tibble(
+#'     site_name = c("Lingreville", "Machova")
+#'   ) %>%
+#'   special.epd::snapshot()
+#' snp2
 snapshot.data.frame <- function(x, ...) {
   # Extract column's names of the input data frame
   names <- colnames(x)
