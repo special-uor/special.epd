@@ -42,15 +42,17 @@ date_info %>%
                        dry_run = TRUE, PK = 1:2)
 # Results: 106 records were updated.
 
-## PENDING
 date_info %>%
   dplyr::filter(is.na(reason_age_not_used) |
                   reason_age_not_used %>% stringr::str_detect("unknown")) %>%
-  dplyr::select(ID_ENTITY, ID_DATE_INFO, reason_age_not_used) %>%
-  dplyr::mutate(reason_age_not_used = "not applicable") %>%
+  dplyr::select(ID_ENTITY, ID_DATE_INFO, age_used, reason_age_not_used) %>%
+  dplyr::mutate(reason_age_not_used = ifelse(is.na(age_used) |
+                                               age_used == "no",
+                                             "not known",
+                                             "not applicable")) %>%
   rpd:::update_records(conn = conn, table = "date_info",
                        dry_run = TRUE, PK = 1:2)
-# Results:  records were updated.
+# Results: 8754 records were updated.
 
 #### entity ----
 entity <- dabr::select_all(conn, "entity") %>%
@@ -135,13 +137,162 @@ date_info_2 %>%
   dplyr::select(ID_ENTITY, ID_DATE_INFO, age_used) %>%
   dplyr::mutate(age_used = "no") %>%
   rpd:::update_records(conn = conn, table = "date_info",
-                       dry_run = !TRUE, PK = 1:2)
+                       dry_run = TRUE, PK = 1:2)
 # Results: 1 record was updated.
+
+##### date_type ----
+date_info_enumerates_sph_date_type <-
+  date_info_enumerates_sph %>%
+  dplyr::filter(variable == "date_type",
+                current != new)
+date_info_2 %>%
+  dplyr::filter(date_type %in% date_info_enumerates_sph_date_type$current) %>%
+  dplyr::select(ID_ENTITY, ID_DATE_INFO, date_type) %>%
+  dplyr::left_join(date_info_enumerates_sph_date_type,
+                   by = c("date_type" = "current")) %>%
+  dplyr::rename(date_type_old = date_type,
+                date_type = new) %>%
+  dplyr::select(ID_ENTITY, ID_DATE_INFO, date_type) %>%
+  rpd:::update_records(conn = conn, table = "date_info",
+                       dry_run = TRUE, PK = 1:2)
+# Results: 455 record was updated.
+
+##### material_dated ----
+date_info_enumerates_sph_material_dated <-
+  date_info_enumerates_sph %>%
+  dplyr::filter(variable == "material_dated",
+                current != new)
+date_info_2 %>%
+  dplyr::filter(material_dated %in%
+                  date_info_enumerates_sph_material_dated$current) %>%
+  dplyr::select(ID_ENTITY, ID_DATE_INFO, material_dated) %>%
+  dplyr::left_join(date_info_enumerates_sph_material_dated,
+                   by = c("material_dated" = "current")) %>%
+  # dplyr::filter(is.na(new))
+  dplyr::rename(material_dated_old = material_dated,
+                material_dated = new) %>%
+  dplyr::select(ID_ENTITY, ID_DATE_INFO, material_dated) %>%
+  rpd:::update_records(conn = conn, table = "date_info",
+                       dry_run = TRUE, PK = 1:2)
+# Results: 375 record was updated.
+
+##### reason_age_not_used ----
+date_info_enumerates_sph_reason_age_not_used <-
+  date_info_enumerates_sph %>%
+  dplyr::filter(variable == "reason_age_not_used",
+                current != new | stringr::str_detect(SPH, "notes|reason")) %>%
+  dplyr::mutate(new_notes = ifelse(stringr::str_detect(SPH, "notes"),
+                                   new,
+                                   NA),
+                new_age_used = ifelse(stringr::str_detect(SPH, "reason"),
+                                      "no",
+                                      NA),
+                new_reason = ifelse(is.na(new_notes),
+                                    ifelse(is.na(new_age_used),
+                                           new,
+                                           NA),
+                                    NA))
+date_info_2 %>%
+  dplyr::filter(reason_age_not_used %in%
+                  date_info_enumerates_sph_reason_age_not_used$current) %>%
+  dplyr::select(ID_ENTITY,
+                ID_DATE_INFO,
+                age_used_old = age_used,
+                reason_age_not_used,
+                notes_old = notes) %>%
+  dplyr::left_join(date_info_enumerates_sph_reason_age_not_used,
+                   by = c("reason_age_not_used" = "current")) %>%
+  # dplyr::filter(is.na(new))
+  dplyr::rename(reason_age_not_used_old = reason_age_not_used,
+                reason_age_not_used = new_reason,
+                notes = new_notes,
+                age_used = new_age_used) %>%
+  dplyr::select(ID_ENTITY,
+                ID_DATE_INFO,
+                # age_used_old,
+                # age_used,
+                reason_age_not_used_old,
+                reason_age_not_used,
+                notes_old,
+                notes) %>%
+  dplyr::mutate(notes = dplyr::coalesce(notes_old, notes)) %>%
+  dplyr::select(-dplyr::contains("_old")) %>%
+  rpd:::update_records(conn = conn, table = "date_info",
+                       dry_run = !TRUE, PK = 1:2)
+# Results: 289 record was updated.
 
 ## entity ----
 entity_enumerates_sph <-
   readxl::read_excel("inst/extdata/epd_enumerates_list_2022-04-04_SPH.xlsx",
                      sheet = 2)
+entity_2 <- dabr::select_all(conn, "entity") %>%
+  tibble::as_tibble() %>%
+  magrittr::set_class(c("entity", class(.)))
+
+##### site_type ----
+entity_enumerates_sph_site_type <-
+  entity_enumerates_sph %>%
+  dplyr::filter(variable == "site_type",
+                current != new)
+entity_2 %>%
+  dplyr::filter(site_type %in%
+                  entity_enumerates_sph_site_type$current) %>%
+  dplyr::select(ID_SITE, ID_ENTITY, site_type) %>%
+  dplyr::left_join(entity_enumerates_sph_site_type,
+                   by = c("site_type" = "current")) %>%
+  # dplyr::filter(is.na(new))
+  dplyr::rename(site_type_old = site_type,
+                site_type = new) %>%
+  dplyr::select(ID_SITE, ID_ENTITY, site_type) %>%
+  rpd:::update_records(conn = conn, table = "entity",
+                       dry_run = TRUE, PK = 1:2)
+# Results: 66 record was updated.
+
+##### source ----
+entity_enumerates_sph_source <-
+  entity_enumerates_sph %>%
+  dplyr::filter(variable == "source",
+                current != new)
+entity_2 %>%
+  dplyr::filter(source %in%
+                  entity_enumerates_sph_source$current) %>%
+  dplyr::select(ID_SITE, ID_ENTITY, source) %>%
+  dplyr::left_join(entity_enumerates_sph_source,
+                   by = c("source" = "current")) %>%
+  # dplyr::filter(is.na(new))
+  dplyr::rename(source_old = source,
+                source = new) %>%
+  dplyr::select(ID_SITE, ID_ENTITY, source) %>%
+  rpd:::update_records(conn = conn, table = "entity",
+                       dry_run = TRUE, PK = 1:2)
+# Results: 15 record was updated.
+
+## sample ----
+sample_enumerates_sph <-
+  readxl::read_excel("inst/extdata/epd_enumerates_list_2022-04-04_SPH.xlsx",
+                     sheet = 3)
+sample_2 <- dabr::select_all(conn, "sample") %>%
+  tibble::as_tibble() %>%
+  magrittr::set_class(c("sample", class(.)))
+
+##### sample_type ----
+sample_enumerates_sph_sample_type <-
+  sample_enumerates_sph %>%
+  dplyr::filter(variable == "sample_type",
+                current != new)
+sample_2 %>%
+  dplyr::filter(sample_type %in%
+                  sample_enumerates_sph_sample_type$current) %>%
+  dplyr::select(ID_ENTITY, ID_SAMPLE, sample_type) %>%
+  dplyr::left_join(sample_enumerates_sph_sample_type,
+                   by = c("sample_type" = "current")) %>%
+  # dplyr::filter(is.na(new))
+  dplyr::rename(sample_type_old = sample_type,
+                sample_type = new) %>%
+  dplyr::select(ID_ENTITY, ID_SAMPLE, sample_type) %>%
+  rpd:::update_records(conn = conn, table = "sample",
+                       dry_run = TRUE, PK = 1:2)
+# Results: 1102 record was updated.
 
 # Close database connection
 dabr::close_conn(conn)
