@@ -1,5 +1,5 @@
-special_epd <- dabr::select_all(conn, "entity")
 `%>%` <- special.epd::`%>%`
+# Create snapshot ----
 special_epd_db_dump <- special.epd::snapshot() %>%
   special.epd::write_csvs(paste0("~/Downloads/special_epd_", Sys.Date()))
 special_epd_entities_with_dates <-
@@ -103,8 +103,34 @@ special_epd_summary <- special_epd_db_dump$entity %>%
   dplyr::select(-DATES, -SAMPLES, -AM, -COUNTS_0, -COUNTS_1, -COUNTS_2) %>%
   dplyr::select(-n_counts_0, -n_counts_1, -n_counts_2)
 
+# Store summary table ----
+## CSV ----
 special_epd_summary %>%
   readr::write_excel_csv(paste0("~/Downloads/special-epd_summary_",
                                 Sys.Date(),
                                 ".csv"),
                          na = "")
+
+## Excel ----
+wb <- openxlsx::createWorkbook()
+openxlsx::addWorksheet(wb, "summary")
+openxlsx::writeData(wb, "summary", special_epd_summary)
+false_cols <- openxlsx::createStyle(fontColour = "#9C0006", bgFill = "#FFC7CE")
+true_cols <- openxlsx::createStyle(fontColour = "#006100", bgFill = "#C6EFCE")
+openxlsx::conditionalFormatting(wb,
+                                sheet = "summary",
+                                cols = 16:19,
+                                rows = seq_len(nrow(special_epd_summary) + 1),
+                                type = "contains",
+                                rule = "TRUE",
+                                style = true_cols)
+openxlsx::conditionalFormatting(wb,
+                                sheet = "summary",
+                                cols = 16:19,
+                                rows = seq_len(nrow(special_epd_summary) + 1),
+                                type = "contains",
+                                rule = "FALSE",
+                                style = false_cols)
+openxlsx::saveWorkbook(wb, paste0("~/Downloads/special-epd_summary_",
+                                  Sys.Date(),
+                                  ".xlsx"))
