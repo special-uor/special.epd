@@ -8,8 +8,18 @@
 \description{
 This is a data package that provides access to records from the European Pollen Database (EPD), that have been checked by members of the SPECIAL research group. We have created age models using `rbacon` for each entity/core.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/special-uor/special.epd/}
+  \item \url{https://special-uor.github.io/special.epd/}
+  \item \url{https://research.reading.ac.uk/palaeoclimate/}
+  \item Report bugs at \url{https://github.com/special-uor/special.epd/issues/}
+}
+
+}
 \author{
-\strong{Maintainer}: Roberto Villegas-Diaz \email{r.villegas-diaz@reading.ac.uk} (\href{https://orcid.org/0000-0001-5036-8661}{ORCID})
+\strong{Maintainer}: Roberto Villegas-Diaz \email{r.villegas-diaz@outlook.com} (\href{https://orcid.org/0000-0001-5036-8661}{ORCID})
 
 Authors:
 \itemize{
