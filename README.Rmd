@@ -71,7 +71,7 @@ This function returns a list with 5 components:
     
   All these data frames can be linked to the `sample` table using the column called `ID_SAMPLE`.
 
-:warning: **NOTE:** the ouput is returned "invisibly", so you should assign the output of the function to a variable.
+:warning: **NOTE:** the output is returned "invisibly", so you should assign the output of the function to a variable.
 
 ```{r, eval = FALSE}
 output <- special.epd::snapshot(...)

@@ -1,6 +1,6 @@
 #' Get entities from the entity table
 #'
-#' @param conn DBo connection object.
+#' @param conn DB connection object.
 #' @param ID_ENTITY Numeric vector with IDs linked to entities.
 #'
 #' @return Tibble with entities and external links.

@@ -9,7 +9,7 @@
 <!-- <img src="inst/images/logo.png" alt="logo" align="right" height=200px/> -->
 <!-- badges: start -->
 
-[![](https://img.shields.io/badge/devel%20version-1.0.0.9000-yellow.svg)](https://github.com/special-uor/special.epd)
+[![](https://img.shields.io/badge/devel%20version-1.0.0-yellow.svg)](https://github.com/special-uor/special.epd)
 [![R build
 status](https://github.com/special-uor/special.epd/workflows/R-CMD-check/badge.svg)](https://github.com/special-uor/special.epd/actions)
 [![](https://www.r-pkg.org/badges/version/special.epd?color=black)](https://cran.r-project.org/package=special.epd)
@@ -75,7 +75,7 @@ This function returns a list with 5 components:
     All these data frames can be linked to the `sample` table using the
     column called `ID_SAMPLE`.
 
-:warning: **NOTE:** the ouput is returned “invisibly”, so you should
+:warning: **NOTE:** the output is returned “invisibly”, so you should
 assign the output of the function to a variable.
 
 ``` r
