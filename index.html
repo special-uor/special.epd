@@ -12,9 +12,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
 <script src="pkgdown.js"></script><meta property="og:title" content="SPECIAL Research Group's Version of the European Pollen Database (EPD)">
-<meta property="og:description" content="This is a data package to provide access to records from the
+<meta property="og:description" content="This is a data package that provides access to records from the
     European Pollen Database (EPD), that have been checked by members of the
-    SPECIAL reseach group. We have added age models using `rbacon` for each
+    SPECIAL research group. We have created age models using `rbacon` for each
     entity/core.">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -36,7 +36,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">special.epd</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -46,7 +46,14 @@
   <a href="reference/index.html">Reference</a>
 </li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="nav navbar-nav navbar-right">
+<li>
+  <a href="https://github.com/special-uor/special.epd/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
 </div>
 <!--/.nav-collapse -->
   </div>
@@ -115,7 +122,7 @@
 </ul>
 All these data frames can be linked to the <code>sample</code> table using the column called <code>ID_SAMPLE</code>.</li>
 </ul>
-<p><span class="emoji" data-emoji="warning">⚠️</span> <strong>NOTE:</strong> the ouput is returned “invisibly”, so you should assign the output of the function to a variable.</p>
+<p><span class="emoji" data-emoji="warning">⚠️</span> <strong>NOTE:</strong> the output is returned “invisibly”, so you should assign the output of the function to a variable.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span>
 <span class="va">output</span><span class="op">$</span><span class="va">entity</span>
@@ -263,12 +270,37 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="section level2">
 <h2 id="spatial-distribution-of-the-entities">Spatial distribution of the entities<a class="anchor" aria-label="anchor" href="#spatial-distribution-of-the-entities"></a>
 </h2>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
+<span class="fu">special.epd</span><span class="fu">::</span><span class="va"><a href="reference/entity.html">entity</a></span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">plot_climate</span><span class="op">(</span>var <span class="op">=</span> <span class="st">"elevation"</span>, units <span class="op">=</span> <span class="st">"m ASL"</span>, 
+                      ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">85</span><span class="op">)</span>,
+                      xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">30</span>, <span class="fl">170</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="reference/figures/README-special-epd-1.png" width="100%"></p>
+</div>
+<div class="section level2">
+<h2 id="extract-potential-natural-vegetation-pnv">Extract Potential Natural Vegetation (PNV)<a class="anchor" aria-label="anchor" href="#extract-potential-natural-vegetation-pnv"></a>
+</h2>
+<p>Using the package <code>smpds</code> [<a href="https://github.com/special-uor/smpds" class="external-link uri">https://github.com/special-uor/smpds</a>] we can extract the PNV for each entity and create a plot:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
+<span class="va">special.epd_pnv</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va"><a href="reference/entity.html">entity</a></span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">extract_biome</span><span class="op">(</span><span class="op">)</span>
+
+<span class="co"># For a quicker execution</span>
+<span class="va">special.epd_pnv</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va"><a href="reference/entity.html">entity</a></span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">parallel_extract_biome</span><span class="op">(</span>cpus <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>
+
+<span class="co"># Plot the PNV</span>
+<span class="va">special.epd_pnv</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">plot_biome</span><span class="op">(</span>ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">85</span><span class="op">)</span>,
+                    xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">30</span>, <span class="fl">170</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README-pnv-1.png" width="100%"></p>
 </div>
 <div class="section level2">
 <h2 id="summary-of-the-database">Summary of the database<a class="anchor" aria-label="anchor" href="#summary-of-the-database"></a>
 </h2>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
 <span class="va">special_epd_summary</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/db_summary.html">db_summary</a></span><span class="op">(</span><span class="op">)</span>
 <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span>
@@ -292,13 +324,20 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <td align="right">1667</td>
 </tr></tbody>
 </table>
-<!-- ## Extract Potential Natural Vegetation --><!-- Using the package `smpds` [https://github.com/special-uor/smpds] we can extract the PNV for each entity and create a plot: -->
 </div>
 </div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-    <div class="license">
+    <div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/special-uor/special.epd/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/special-uor/special.epd/issues/" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>
@@ -318,6 +357,7 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>Roberto Villegas-Diaz <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0001-5036-8661" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
+<li>Sandy P. Harrison <br><small class="roles"> Author </small> <a href="https://orcid.org/0000-0001-5687-1903" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
@@ -325,7 +365,7 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/special-uor/special.epd" class="external-link"><img src="https://img.shields.io/badge/devel%20version-1.0.0.9000-yellow.svg"></a></li>
+<li><a href="https://github.com/special-uor/special.epd" class="external-link"><img src="https://img.shields.io/badge/devel%20version-1.0.0-yellow.svg"></a></li>
 <li><a href="https://github.com/special-uor/special.epd/actions" class="external-link"><img src="https://github.com/special-uor/special.epd/workflows/R-CMD-check/badge.svg" alt="R build status"></a></li>
 <li><a href="https://cran.r-project.org/package=special.epd" class="external-link"><img src="https://www.r-pkg.org/badges/version/special.epd?color=black"></a></li>
 </ul>
@@ -337,7 +377,7 @@ All these data frames can be linked to the <code>sample</code> table using the c
 
       <footer><div class="copyright">
   <p></p>
-<p>Developed by Roberto Villegas-Diaz.</p>
+<p>Developed by Roberto Villegas-Diaz, Sandy P. Harrison.</p>
 </div>
 
 <div class="pkgdown">

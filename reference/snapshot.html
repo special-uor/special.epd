@@ -18,7 +18,7 @@ dates, samples, age models and pollen counts."><!-- mathjax --><script src="http
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">special.epd</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -26,7 +26,13 @@ dates, samples, age models and pollen counts."><!-- mathjax --><script src="http
       <ul class="nav navbar-nav"><li>
   <a href="../reference/index.html">Reference</a>
 </li>
-      </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
+      </ul><ul class="nav navbar-nav navbar-right"><li>
+  <a href="https://github.com/special-uor/special.epd/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
@@ -36,7 +42,7 @@ dates, samples, age models and pollen counts."><!-- mathjax --><script src="http
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create a snapshot of the data linked to entities</h1>
-    
+    <small class="dont-index">Source: <a href="https://github.com/special-uor/special.epd/blob/HEAD/R/utils-db.R" class="external-link"><code>R/utils-db.R</code></a></small>
     <div class="hidden name"><code>snapshot.Rd</code></div>
     </div>
 
@@ -163,6 +169,33 @@ provided.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       2         2 Aammiq    AMMIQ           4      96        96</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 1 more variable: pollen_counts &lt;tibble[,3]&gt;</span></span>
+<span class="r-in"><span class="co"># Using the entity table</span></span>
+<span class="r-in"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">magrittr</span><span class="fu">::</span><span class="va">`%&gt;%`</span></span>
+<span class="r-in"><span class="va">snp1</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va"><a href="entity.html">entity</a></span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/slice.html" class="external-link">slice</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">special.epd</span><span class="fu">::</span><span class="fu">snapshot</span><span class="op">(</span><span class="st">"MBA3"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">snp1</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ID_SITE ID_ENTITY site_name    entity_name dates samples age_model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1         1 Aalkistensee MBA3            7      57        57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 1 more variable: pollen_counts &lt;tibble[,3]&gt;</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># Using a custom data frame (`tibble` object) with site names</span></span>
+<span class="r-in"><span class="va">snp2</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span class="r-in">    site_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Lingreville"</span>, <span class="st">"Machova"</span><span class="op">)</span></span>
+<span class="r-in">  <span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in">  <span class="fu">special.epd</span><span class="fu">::</span><span class="fu">snapshot</span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">snp2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 5 × 8</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ID_SITE ID_ENTITY site_name   entity_name dates samples age_model</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>     810       916 Lingreville BRICQRUE        2      22        22</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>     810       917 Lingreville LINGR2C1        1      59         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>     810       918 Lingreville LINGR2C2        1      12         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>     810       919 Lingreville LINGREV4        1      29         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>     876       986 Machova     MACHOVA         1      21        21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 1 more variable: pollen_counts &lt;tibble[,3]&gt;</span></span>
 </code></pre></div>
     </div>
   </div>
@@ -173,7 +206,7 @@ provided.</p></dd>
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Roberto Villegas-Diaz.</p>
+  <p></p><p>Developed by Roberto Villegas-Diaz, Sandy P. Harrison.</p>
 </div>
 
 <div class="pkgdown">
