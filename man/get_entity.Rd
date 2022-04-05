@@ -7,7 +7,7 @@
 get_entity(conn, ID_ENTITY)
 }
 \arguments{
-\item{conn}{DBo connection object.}
+\item{conn}{DB connection object.}
 
 \item{ID_ENTITY}{Numeric vector with IDs linked to entities.}
 }

@@ -9,7 +9,7 @@
 <!-- <img src="inst/images/logo.png" alt="logo" align="right" height=200px/> -->
 <!-- badges: start -->
 
-[![](https://img.shields.io/badge/devel%20version-1.0.0.9000-yellow.svg)](https://github.com/special-uor/special.epd)
+[![](https://img.shields.io/badge/devel%20version-1.0.0-yellow.svg)](https://github.com/special-uor/special.epd)
 [![R build
 status](https://github.com/special-uor/special.epd/workflows/R-CMD-check/badge.svg)](https://github.com/special-uor/special.epd/actions)
 [![](https://www.r-pkg.org/badges/version/special.epd?color=black)](https://cran.r-project.org/package=special.epd)
@@ -75,7 +75,7 @@ This function returns a list with 5 components:
     All these data frames can be linked to the `sample` table using the
     column called `ID_SAMPLE`.
 
-:warning: **NOTE:** the ouput is returned “invisibly”, so you should
+:warning: **NOTE:** the output is returned “invisibly”, so you should
 assign the output of the function to a variable.
 
 ``` r
@@ -219,7 +219,37 @@ special.epd::snapshot("MBA3") %>%
 
 ## Spatial distribution of the entities
 
+``` r
+`%>%` <- special.epd::`%>%`
+special.epd::entity %>%
+  smpds::plot_climate(var = "elevation", units = "m ASL", 
+                      ylim = c(25, 85),
+                      xlim = c(-30, 170))
+```
+
 <img src="man/figures/README-special-epd-1.png" width="100%" />
+
+## Extract Potential Natural Vegetation (PNV)
+
+Using the package `smpds` \[<https://github.com/special-uor/smpds>\] we
+can extract the PNV for each entity and create a plot:
+
+``` r
+`%>%` <- special.epd::`%>%`
+special.epd_pnv <- special.epd::entity %>%
+  smpds::extract_biome()
+
+# For a quicker execution
+special.epd_pnv <- special.epd::entity %>%
+  smpds::parallel_extract_biome(cpus = 4)
+
+# Plot the PNV
+special.epd_pnv %>%
+  smpds::plot_biome(ylim = c(25, 85),
+                    xlim = c(-30, 170))
+```
+
+<img src="man/figures/README-pnv-1.png" width="100%" />
 
 ## Summary of the database
 
@@ -238,6 +268,3 @@ tibble::tibble(
 | # Entities | with Dates | with Age models (using IntCal20) | with Pollen counts |
 |-----------:|-----------:|---------------------------------:|-------------------:|
 |       1667 |       1667 |                             1476 |               1667 |
-
-<!-- ## Extract Potential Natural Vegetation -->
-<!-- Using the package `smpds` [https://github.com/special-uor/smpds] we can extract the PNV for each entity and create a plot: -->
