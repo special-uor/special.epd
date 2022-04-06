@@ -2,8 +2,7 @@
 % Please edit documentation in R/utils-db.R
 \name{write_csvs}
 \alias{write_csvs}
-\title{Write DB snapshot to disk
-Write DB snapshot to disk as individual CSV files.}
+\title{Write DB snapshot to disk}
 \usage{
 write_csvs(.data, prefix)
 }
@@ -16,6 +15,5 @@ write_csvs(.data, prefix)
 Invisibly returns the input DB snapshot.
 }
 \description{
-Write DB snapshot to disk
 Write DB snapshot to disk as individual CSV files.
 }

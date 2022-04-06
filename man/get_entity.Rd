@@ -17,3 +17,4 @@ Tibble with entities and external links.
 \description{
 Get entities from the entity table
 }
+\keyword{internal}
