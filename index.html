@@ -66,7 +66,8 @@
       </header><div class="row">
   <div class="contents col-md-9">
 <div class="section level1">
-<div class="page-header"><h1 id="specialepd-special-research-groups-version-of-the-european-pollen-database-epd">special.epd: SPECIAL Research Group’s Version of the European Pollen Database (EPD)<a class="anchor" aria-label="anchor" href="#specialepd-special-research-groups-version-of-the-european-pollen-database-epd"></a>
+<div class="page-header"><h1 id="specialepd-special-research-groups-version-of-the-european-pollen-database-epd">special.epd: SPECIAL Research Group’s Version of the European Pollen
+Database (EPD)<a class="anchor" aria-label="anchor" href="#specialepd-special-research-groups-version-of-the-european-pollen-database-epd"></a>
 </h1></div>
 <!-- S<sub>PECIAL</sub> <sub>R</sub>e<sub>search group's version of the</sub> E<sub>uropean</sub> Po<sub>llen</sub> D<sub>atabase (EPD)</sub>  -->
 <!-- *S*PECIAL R*e*search group's version of the *E*uropean *Po*llen *D*atabase (EPD)  -->
@@ -74,11 +75,14 @@
 <!-- <img src="inst/images/logo.png" alt="logo" align="right" height=200px/> -->
 <!-- badges: start -->
 
-<p>The goal of <code>special.epd</code> is to provide access to the SPECIAL Research group’s version of the European Pollen Database (EPD).</p>
+<p>The goal of <code>special.epd</code> is to provide access to the
+SPECIAL Research group’s version of the European Pollen Database
+(EPD).</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You <strong>can(not)</strong> install the released version of <code>special.epd</code> from <a href="https://CRAN.R-project.org" class="external-link">CRAN</a> with:</p>
+<p>You <strong>can(not)</strong> install the released version of
+<code>special.epd</code> from <a href="https://CRAN.R-project.org" class="external-link">CRAN</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"special.epd"</span><span class="op">)</span></code></pre></div>
 <p>And the development version from <a href="https://github.com/special-uor/special.epd" class="external-link">GitHub</a> with:</p>
@@ -102,27 +106,43 @@
 <div class="section level4">
 <h4 id="create-a-snapshot-of-entities">Create a snapshot of entities<a class="anchor" aria-label="anchor" href="#create-a-snapshot-of-entities"></a>
 </h4>
-<p>The function <code><a href="reference/snapshot.html">special.epd::snapshot</a></code> takes few different parameters and based on the first one, <code>x</code>, it returns a variety of snapshots.</p>
+<p>The function <code><a href="reference/snapshot.html">special.epd::snapshot</a></code> takes few different
+parameters and based on the first one, <code>x</code>, it returns a
+variety of snapshots.</p>
 <p>This function returns a list with 5 components:</p>
 <ul>
 <li>
-<code>entity</code>: data frame (<code>tibble</code> object) with the metadata associated to the entities.</li>
+<code>entity</code>: data frame (<code>tibble</code> object) with
+the metadata associated to the entities.</li>
 <li>
-<code>date_info</code>: data frame (<code>tibble</code> object) with the dating information. This one can be linked to the <code>entity</code> table using the column called <code>ID_ENTITY</code>.</li>
+<code>date_info</code>: data frame (<code>tibble</code> object) with
+the dating information. This one can be linked to the
+<code>entity</code> table using the column called
+<code>ID_ENTITY</code>.</li>
 <li>
-<code>sample</code>: data frame (<code>tibble</code> object) with the sampling information. This one can be linked to the <code>entity</code> table using the column called <code>ID_ENTITY</code>.</li>
+<code>sample</code>: data frame (<code>tibble</code> object) with
+the sampling information. This one can be linked to the
+<code>entity</code> table using the column called
+<code>ID_ENTITY</code>.</li>
 <li>
-<code>age_model</code>: : data frame (<code>tibble</code> object) with the “new” age models (created with <a href="https://github.com/special-uor/ageR" class="external-link"><strong>ageR</strong></a>). This one can be linked to the <code>sample</code> table using the column called <code>ID_SAMPLE</code>.</li>
+<code>age_model</code>: : data frame (<code>tibble</code> object)
+with the “new” age models (created with <a href="https://github.com/special-uor/ageR" class="external-link"><strong>ageR</strong></a>).
+This one can be linked to the <code>sample</code> table using the column
+called <code>ID_SAMPLE</code>.</li>
 <li>
-<code>pollen_count</code>: list of data frames (<code>tibble</code> objects) containing the pollen counts for 3 levels of “amalgamation”:
+<code>pollen_count</code>: list of data frames (<code>tibble</code>
+objects) containing the pollen counts for 3 levels of “amalgamation”:
 <ul>
 <li><code>clean</code></li>
 <li><code>intermediate</code></li>
 <li><code>amalgamated</code></li>
 </ul>
-All these data frames can be linked to the <code>sample</code> table using the column called <code>ID_SAMPLE</code>.</li>
+All these data frames can be linked to the <code>sample</code> table
+using the column called <code>ID_SAMPLE</code>.</li>
 </ul>
-<p><span class="emoji" data-emoji="warning">⚠️</span> <strong>NOTE:</strong> the output is returned “invisibly”, so you should assign the output of the function to a variable.</p>
+<p><span class="emoji" data-emoji="warning">⚠️</span>
+<strong>NOTE:</strong> the output is returned “invisibly”, so you should
+assign the output of the function to a variable.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">output</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span>
 <span class="va">output</span><span class="op">$</span><span class="va">entity</span>
@@ -202,7 +222,8 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="section level5">
 <h5 id="extracting-all-the-records-at-once">Extracting all the records at once<a class="anchor" aria-label="anchor" href="#extracting-all-the-records-at-once"></a>
 </h5>
-<p>This will run very slow, so if only few entities are required, it would be better to indicate which, based on the previous examples.</p>
+<p>This will run very slow, so if only few entities are required, it
+would be better to indicate which, based on the previous examples.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="fu"><a href="reference/snapshot.html">snapshot</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 </div>
@@ -210,12 +231,17 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="section level4">
 <h4 id="export-data-as-individual-csv-files">Export data as individual CSV files<a class="anchor" aria-label="anchor" href="#export-data-as-individual-csv-files"></a>
 </h4>
-<p>The function <code><a href="reference/write_csvs.html">special.epd::write_csvs</a></code> takes to parameters:</p>
+<p>The function <code><a href="reference/write_csvs.html">special.epd::write_csvs</a></code> takes to
+parameters:</p>
 <ul>
 <li>
-<code>.data</code>: a list of class <code>snapshot</code>, this one can be generated using the function <code><a href="reference/snapshot.html">special.epd::snapshot</a></code> (see previous section).</li>
+<code>.data</code>: a list of class <code>snapshot</code>, this one
+can be generated using the function <code><a href="reference/snapshot.html">special.epd::snapshot</a></code>
+(see previous section).</li>
 <li>
-<code>prefix</code>: a prefix name to be included in each individual files, this prefix can include a relative or absolute path to a directory in the local machine.</li>
+<code>prefix</code>: a prefix name to be included in each individual
+files, this prefix can include a relative or absolute path to a
+directory in the local machine.</li>
 </ul>
 <div class="section level5">
 <h5 id="without-a-path">Without a path<a class="anchor" aria-label="anchor" href="#without-a-path"></a>
@@ -232,15 +258,15 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="section level6">
 <h6 id="output">Output<a class="anchor" aria-label="anchor" href="#output"></a>
 </h6>
-<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co">#&gt;                                 levelName</span></span>
-<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; 1 .                                      </span></span>
-<span id="cb12-3"><a href="#cb12-3"></a><span class="co">#&gt; 2  ¦--MBA3_age_model.csv                 </span></span>
-<span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt; 3  ¦--MBA3_dates.csv                     </span></span>
-<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; 4  ¦--MBA3_metadata.csv                  </span></span>
-<span id="cb12-6"><a href="#cb12-6"></a><span class="co">#&gt; 5  ¦--MBA3_pollen_counts_amalgamated.csv </span></span>
-<span id="cb12-7"><a href="#cb12-7"></a><span class="co">#&gt; 6  ¦--MBA3_pollen_counts_clean.csv       </span></span>
-<span id="cb12-8"><a href="#cb12-8"></a><span class="co">#&gt; 7  ¦--MBA3_pollen_counts_intermediate.csv</span></span>
-<span id="cb12-9"><a href="#cb12-9"></a><span class="co">#&gt; 8  °--MBA3_samples.csv</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                 levelName</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 .                                      </span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  ¦--MBA3_age_model.csv                 </span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3  ¦--MBA3_dates.csv                     </span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4  ¦--MBA3_metadata.csv                  </span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5  ¦--MBA3_pollen_counts_amalgamated.csv </span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6  ¦--MBA3_pollen_counts_clean.csv       </span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7  ¦--MBA3_pollen_counts_intermediate.csv</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8  °--MBA3_samples.csv</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level5">
@@ -253,16 +279,16 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="section level6">
 <h6 id="output-1">Output<a class="anchor" aria-label="anchor" href="#output-1"></a>
 </h6>
-<div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="co">#&gt;                                     levelName</span></span>
-<span id="cb14-2"><a href="#cb14-2"></a><span class="co">#&gt; 1 special.uor                                </span></span>
-<span id="cb14-3"><a href="#cb14-3"></a><span class="co">#&gt; 2  °--epd                                    </span></span>
-<span id="cb14-4"><a href="#cb14-4"></a><span class="co">#&gt; 3      ¦--MBA3_age_model.csv                 </span></span>
-<span id="cb14-5"><a href="#cb14-5"></a><span class="co">#&gt; 4      ¦--MBA3_dates.csv                     </span></span>
-<span id="cb14-6"><a href="#cb14-6"></a><span class="co">#&gt; 5      ¦--MBA3_metadata.csv                  </span></span>
-<span id="cb14-7"><a href="#cb14-7"></a><span class="co">#&gt; 6      ¦--MBA3_pollen_counts_amalgamated.csv </span></span>
-<span id="cb14-8"><a href="#cb14-8"></a><span class="co">#&gt; 7      ¦--MBA3_pollen_counts_clean.csv       </span></span>
-<span id="cb14-9"><a href="#cb14-9"></a><span class="co">#&gt; 8      ¦--MBA3_pollen_counts_intermediate.csv</span></span>
-<span id="cb14-10"><a href="#cb14-10"></a><span class="co">#&gt; 9      °--MBA3_samples.csv</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                                     levelName</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 special.uor                                </span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2  °--epd                                    </span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3      ¦--MBA3_age_model.csv                 </span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4      ¦--MBA3_dates.csv                     </span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5      ¦--MBA3_metadata.csv                  </span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6      ¦--MBA3_pollen_counts_amalgamated.csv </span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7      ¦--MBA3_pollen_counts_clean.csv       </span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8      ¦--MBA3_pollen_counts_intermediate.csv</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9      °--MBA3_samples.csv</span></span></code></pre></div>
 </div>
 </div>
 </div>
@@ -273,7 +299,7 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
 <span class="fu">special.epd</span><span class="fu">::</span><span class="va"><a href="reference/entity.html">entity</a></span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
-  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">plot_climate</span><span class="op">(</span>var <span class="op">=</span> <span class="st">"elevation"</span>, units <span class="op">=</span> <span class="st">"m ASL"</span>, 
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/smpds/man/plot_climate.html" class="external-link">plot_climate</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"elevation"</span>, units <span class="op">=</span> <span class="st">"m ASL"</span>, 
                       ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">85</span><span class="op">)</span>,
                       xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">30</span>, <span class="fl">170</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="reference/figures/README-special-epd-1.png" width="100%"></p>
@@ -281,19 +307,20 @@ All these data frames can be linked to the <code>sample</code> table using the c
 <div class="section level2">
 <h2 id="extract-potential-natural-vegetation-pnv">Extract Potential Natural Vegetation (PNV)<a class="anchor" aria-label="anchor" href="#extract-potential-natural-vegetation-pnv"></a>
 </h2>
-<p>Using the package <code>smpds</code> [<a href="https://github.com/special-uor/smpds" class="external-link uri">https://github.com/special-uor/smpds</a>] we can extract the PNV for each entity and create a plot:</p>
+<p>Using the package <code>smpds</code> [<a href="https://github.com/special-uor/smpds" class="external-link uri">https://github.com/special-uor/smpds</a>] we can extract the
+PNV for each entity and create a plot:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">`%&gt;%`</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va">`%&gt;%`</span>
 <span class="va">special.epd_pnv</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va"><a href="reference/entity.html">entity</a></span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
-  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">extract_biome</span><span class="op">(</span><span class="op">)</span>
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/smpds/man/extract_biome.html" class="external-link">extract_biome</a></span><span class="op">(</span><span class="op">)</span>
 
 <span class="co"># For a quicker execution</span>
 <span class="va">special.epd_pnv</span> <span class="op">&lt;-</span> <span class="fu">special.epd</span><span class="fu">::</span><span class="va"><a href="reference/entity.html">entity</a></span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
-  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">parallel_extract_biome</span><span class="op">(</span>cpus <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/smpds/man/extract_biome.html" class="external-link">parallel_extract_biome</a></span><span class="op">(</span>cpus <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>
 
 <span class="co"># Plot the PNV</span>
 <span class="va">special.epd_pnv</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
-  <span class="fu">smpds</span><span class="fu">::</span><span class="fu">plot_biome</span><span class="op">(</span>ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">85</span><span class="op">)</span>,
+  <span class="fu">smpds</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/smpds/man/plot_biome.html" class="external-link">plot_biome</a></span><span class="op">(</span>ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">85</span><span class="op">)</span>,
                     xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">30</span>, <span class="fl">170</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="reference/figures/README-pnv-1.png" width="100%"></p>
 </div>
@@ -311,6 +338,12 @@ All these data frames can be linked to the <code>sample</code> table using the c
   <span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
   <span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <table class="table">
+<colgroup>
+<col width="15%">
+<col width="15%">
+<col width="43%">
+<col width="25%">
+</colgroup>
 <thead><tr class="header">
 <th align="right"># Entities</th>
 <th align="right">with Dates</th>
@@ -382,7 +415,8 @@ All these data frames can be linked to the <code>sample</code> table using the c
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a>
+2.0.2.</p>
 </div>
 
       </footer>
