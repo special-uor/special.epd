@@ -1,0 +1,22 @@
+reference:
+- title: "Datasets"
+  desc: >
+    `tibble` objects representing each table in the database
+- contents:
+  - age_model
+  - date_info
+  - entity
+  - external_link
+  - model_name
+  - pollen_count
+  - sample
+  - taxon_name
+
+- title: "Utils"
+  desc:: >
+    Functions to manipulate the datasets included in the package
+- contents:
+  - db_summary
+  - print.snapshot
+  - snapshot
+  - write_csvs
