@@ -11510,3 +11510,50 @@ waldo::compare(aux_samples_counts_6 %>%
 # Delete objects with counts
 rm(aux_samples_counts, aux_samples_counts_2, aux_samples_counts_3,
    aux_samples_counts_4, aux_samples_counts_5, aux_samples_counts_6)
+
+
+# 2022-05-03 ----
+"The entity called ROS-2 was identified as having erroneous longitude (same
+value as the latitude). This checks will detect any other similar scenarios."
+
+`%>%` <- magrittr::`%>%`
+conn <- dabr::open_conn_mysql("SPECIAL-EPD",
+                              password = rstudioapi::askForPassword())
+entity_tb <- dabr::select_all(conn, "entity")
+entity_tb %>%
+  dplyr::filter(round(latitude, 3) == round(longitude, 3)) %>%
+  dplyr::select(ID_SITE:elevation) %>%
+  datapasta::dpasta()
+
+revised_entity_metadata <-
+  tibble::tribble(
+    ~ID_SITE, ~ID_ENTITY,                         ~site_name, ~entity_name, ~latitude, ~longitude, ~elevation,
+    127L,       145L,                    "Bellefontaine",   "BELLFONT", 46.575278,    6.093056,       1093,
+    424L,       471L,               "Glendalough Valley",         "GL", 53.007345,   -6.348035,        130,
+    448L,       500L, "Grosses Uberling Schattseit-Moor",   "UBERLING", 47.172222,        13.9,       1750,
+    555L,       621L,               "Kardashinski Swamp",     "KARDAS", 46.516667,   32.616667,          4,
+    628L,       705L,                      "Lac Chambon",       "LVC1", 45.574167,    2.922222,        901,
+    651L,       731L,                         "Lac Noir",     "NOIR01", 45.451944,    2.622778,        842,
+    772L,       871L, "Le Grand Etang de Suze-La-Rousse",      "ETANG", 44.323889,    4.833611,         92,
+    863L,       973L,                     "Lough Henney",      "HENSP",  54.45546,    -5.92155,         25,
+    1062L,      1181L,               "Plateau de Prarion",   "PRARION3", 45.884722,   6.749444,       1857,
+    1127L,      1250L,                   "Rosenbergdalen",      "ROS-2",  78.07778,    20.9258,         25,
+    1146L,      1274L,                           "Sabion",    "SABIONA",     44.13,   7.473333,       2216,
+    1160L,      1291L,                    "Saint-Momelin",   "STMOMES2", 50.794167,   2.251667,          2,
+    1190L,      1325L,                           "Serent",    "SERENT1", 47.809444,  -2.468056,         75,
+    1190L,      1326L,                           "Serent",    "SERENT2", 47.809444,  -2.468056,         75,
+    1200L,      1336L,                   "Sierra de Baza",       "BAZA", 37.233333,       -2.7,       1900,
+    1254L,      1393L,                      "Surusoo bog",    "SURUSOO", 58.526111,  22.423056,         43
+  )
+
+special.epd::external_link %>%
+  dplyr::filter(ID_ENTITY %in% revised_entity_metadata$ID_ENTITY) %>%
+  dplyr::filter(external_source == "NEOTOMA") %>%
+  .$external_ID_ENTITY %>%
+  stringr::str_c(collapse = ",") %>%
+  stringr::str_c("https://apps.neotomadb.org/explorer/?datasetids=", .) %>%
+  utils::browseURL()
+
+revised_entity_metadata %>%
+  rpd:::update_records(conn = conn, table = "entity", dry_run = TRUE, PK = 1:2)
+# Results: 16 records were updated.
