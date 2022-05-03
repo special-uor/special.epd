@@ -89,11 +89,13 @@ tibble::tibble(epd_taxa = colnames(EPD_COUNTS_5),
                clean_name = colnames(EPD_COUNTS_5),
                action = NA) %>%
   dplyr::slice(-c(1:16)) %>%
-  dplyr::arrange(epd_taxa) # %>%
-  # readr::write_excel_csv(file = "inst/extdata/epd_taxa_list.csv", na = "")
+  dplyr::arrange(epd_taxa) %>%
+  readr::write_excel_csv(file = "inst/extdata/epd_taxa_list.csv", na = "")
 
 EPD_COUNTS_5$`Calluna vulgaris|clump|pollen|NISP|TRSH` %>% sum(na.rm = TRUE)
 EPD_COUNTS_5$`Calluna vulgaris|NA|pollen|NISP|TRSH` %>% sum(na.rm = TRUE)
+EPD_COUNTS <- EPD_COUNTS_5
+usethis::use_data(EPD_COUNTS, overwrite = TRUE, compress = "xz")
 
 # Unique counts
 unique_counts <-
@@ -113,36 +115,11 @@ idx <- !(colnames(extra_counts_v2)[-c(1:16)] %in% aux$epd_taxa)
 tibble::tibble(epd_taxa = colnames(extra_counts_v2)[-c(1:16)][idx],
                clean_name = epd_taxa,
                action = NA) %>%
-  dplyr::arrange(epd_taxa) #%>%
-  # readr::write_excel_csv(file = "inst/extdata/epd_taxa_list_additional_records.csv", na = "")
+  dplyr::arrange(epd_taxa) %>%
+  readr::write_excel_csv(file = "inst/extdata/epd_taxa_list_additional_records.csv", na = "")
 
 readr::read_csv("inst/extdata/epd_taxa_list.csv") %>%
   dplyr::bind_rows(readr::read_csv("inst/extdata/epd_taxa_list_additional_records.csv")) %>%
-  dplyr::arrange(epd_taxa) #%>%
-  # readr::write_excel_csv(file = "inst/extdata/epd_taxa_list_2022-02-26.csv", na = "")
+  dplyr::arrange(epd_taxa) %>%
+  readr::write_excel_csv(file = "inst/extdata/epd_taxa_list_2022-02-26.csv", na = "")
 
-# Add extra counts (manually extracted) ----
-extra_counts <-
-  readr::read_csv("inst/extdata/epd_missing_records_counts_2022-02-24.csv")
-extra_counts_v2 <- smpds::rm_na_taxa(extra_counts, cols = 1:16)
-waldo::compare(extra_counts, extra_counts_v2)
-EPD_COUNTS_6 <- EPD_COUNTS_5 %>%
-  dplyr::bind_rows(extra_counts) %>%
-  dplyr::arrange(dataset_id, depth)
-
-# Remove excluded taxa (manually inspected by SPH) ----
-idx_exclude_taxa <- colnames(EPD_COUNTS_6) %in% EPD_taxa_to_exclude$epd_taxa
-EPD_COUNTS_7 <- EPD_COUNTS_6 %>%
-  dplyr::select(-EPD_taxa_to_exclude$epd_taxa)
-  # dplyr::select(colnames(EPD_COUNTS_6)[!idx_exclude_taxa])
-
-# Sort columns ----
-col_names <- colnames(EPD_COUNTS_7)
-EPD_COUNTS_8 <- EPD_COUNTS_7 %>%
-  dplyr::select(c(1:16, (order(col_names[-c(1:16)]) + 16)))
-
-EPD_COUNTS <- EPD_COUNTS_8
-usethis::use_data(EPD_COUNTS, overwrite = TRUE, compress = "xz")
-
-EPD_COUNTS %>%
-  readr::write_excel_csv("inst/extdata/epd-records-extracted-from-neotoma_counts_2022-03-07.csv", na = "")
