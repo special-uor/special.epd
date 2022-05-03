@@ -3,14 +3,56 @@
 \docType{data}
 \name{external_link}
 \alias{external_link}
-\title{\code{external_link}}
+\title{External links}
 \format{
-An object of class \code{external_link} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 1977 rows and 7 columns.
+A data frame (\code{tibble} object) with
+1977\verb{ rows and 7} variables:
+\describe{
+\item{ID_SITE}{\code{Unsigned integer}: Unique identifier for the site,
+multiple entities can be located within the same site}
+\item{ID_ENTITY}{\code{Unsigned integer}: Unique identifier for the entity}
+\item{external_ID_SITE}{\code{Unsigned integer}: }
+\item{external_ID_ENTITY}{\code{Unsigned integer}: Unique identifier for the entity}
+\item{external_site_name}{\code{Text}: }
+\item{external_entity_name}{\code{Text}: }
+\item{external_source}{\code{Text}: }
+}
 }
 \usage{
 external_link
 }
 \description{
-\code{external_link}
+Contains information linking the entities to their original sources
+(including the IBERIAN subset (Harrison et al., 2022a),
+EMBSeCBIO (Harrison et al., 2021),
+NEOTOMA (Williams et al., 2018) and
+RPD (Harrison et al., 2022a)). Represents the \code{external_link} table in the
+database.
+}
+\examples{
+external_link_tb <- special.epd::external_link
+head(external_link_tb)
+}
+\references{
+Harrison, S.P., Marinova, E. and Cruz-Silva, E.: EMBSeCBIO pollen database.
+University of Reading. Dataset. doi: https://doi.org/10.17864/1947.309, 2021.
+
+Harrison, S.P., Shen, Y. and Sweeney, L.: Pollen data and charcoal data of
+the Iberian Peninsula (version 3). University of Reading. Dataset.
+doi: https://doi.org/10.17864/1947.000369, 2022a.
+
+Harrison, S.P., Villegas-Diaz, R., Lincoln, P., Kesner, D.,
+Cruz-Silva, E., Sweeney, L., Shen, Y. and Gallagher, D.:
+The Reading Palaeofire Database v1b: an expanded global resource to document
+changes in fire regimes from sedimentary charcoal records. University of
+Reading. Dataset. doi: https://doi.org/10.17864/1947.000345, 2022b.
+
+Williams, J.W., Grimm, E.G., Blois, J., Charles, D.F., Davis, E., Goring,
+S.J., Graham, R., Smith, A.J., Anderson, M., Arroyo-Cabrales, J., Ashworth,
+A.C., Betancourt, J.L., Bills, B.W., Booth, R.K., Buckland, P., Curry, B.,
+Giesecke, T., Hausmann, S., Jackson, S.T., Latorre, C., Nichols, J., Purdum,
+T., Roth, R.E., Stryker, M., Takahara, H.: The Neotoma Paleoecology
+Database: A multi-proxy, international community-curated data resource.
+Quaternary Research 89, 156-177. http://www.neotomadb.org/, 2018.
 }
 \keyword{datasets}

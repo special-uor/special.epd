@@ -3,14 +3,66 @@
 \docType{data}
 \name{age_model}
 \alias{age_model}
-\title{\code{age_model}}
+\title{Age models}
 \format{
-An object of class \code{age_model} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 95954 rows and 8 columns.
+A data frame (\code{tibble} object) with
+95954\verb{ rows and 8} variables:
+\describe{
+\item{ID_MODEL}{\code{Unsigned integer}: Unique identifier for the type of
+model (e.g. IntCal20 = 8) (as in the \code{model_name} table)}
+\item{ID_SAMPLE}{\code{Unsigned integer}: Unique identifier for each
+sample (as in the \code{sample} table)}
+\item{mean}{\code{Integer}: Mean age of the sample}
+\item{median}{\code{Integer}: Median age of the sample}
+\item{UNCERT_5}{\code{Integer}: Lower bound of the 95\% confidence interval
+for the median age}
+\item{UNCERT_25}{\code{Integer}: Lower bound of the 75\% confidence interval
+for the median age}
+\item{UNCERT_75}{\code{Integer}: Upper bound of the 75\% confidence interval
+for the median age}
+\item{UNCERT_95}{\code{Integer}: Upper bound of the 95\% confidence interval
+for the median age}
+}
 }
 \usage{
 age_model
 }
 \description{
-\code{age_model}
+Contains new age models created with the IntCal20 (Reimer et al., 2020),
+SHCal20 (Hogg et al., 2020) and Marine20 (Heaton et al., 2020) calibration
+curves, in combination with the package \code{ageR} (Villegas-Diaz et al., 2022).
+Represents the \code{age_model} table in the database.
+}
+\examples{
+age_model_tb <- special.epd::age_model
+head(age_model_tb)
+}
+\references{
+Heaton, T., Köhler, P., Butzin, M., Bard, E., Reimer, R., Austin, W.,
+Bronk Ramsey, C., Grootes, P., Hughen, K., Kromer, B., Reimer, P.,
+Adkins, J., Burke, A., Cook, M., Olsen, J., & Skinner, L.: Marine20 - the
+marine radiocarbon age calibration curve (0–55,000 cal BP). Radiocarbon, 62,
+779-820, doi: 10.1017/RDC.2020.68, 2020.
+
+Hogg, A., Heaton, T., Hua, Q., Palmer, J., Turney, C., Southon, J.,
+Bayliss, A., Blackwell, P., Boswijk, G., Bronk Ramsey, C., Petchey, F.,
+Reimer, P., Reimer, R., & Wacker, L.: SHCal20 Southern Hemisphere
+calibration, 0–55,000 years cal BP. Radiocarbon, 62, 759-778
+doi: 10.1017/RDC.2020.59, 2020.
+
+Reimer, P., Austin, W., Bard, E., Bayliss, A., Blackwell, P.,
+Bronk Ramsey, C., Butzin, M., Cheng,H. Edwards, R.L., Friedrich, M.,
+Grootes, P.M., Guilderson, T.P., Hajdas, I., Heaton, T.J., Hogg, A.G.,
+Hughen, K.A., Kromer, B., Manning, S.W., Muscheler, R., Palmer, J.G.,
+Pearson, C., van der Plicht, J., Reimer, R.W., Richards, D.A., Scott, E.M.,
+Southon, J.R., Turney, C.S.M., Wacker, L., Adolphi, F., Buntgen, U.,
+Capano, M., Fahrni, S.M., Fogtmann-Schulz, A., Friedrich, R., Kohler, P.,
+Kudsk, S., Miyake, F., Olsen, J., Reinig, F., Sakamoto, M., Sookdeo, M.,
+Talamo, S.: The INTCAL20 Northern Hemisphere radiocarbon age calibration
+curve (0-55 calkBP), Radiocarbon, 62, 725-757,
+doi: 10.1017/RDC.2020.41, 2020.
+
+Villegas-Diaz, R., Cruz-Silva, E., Harrison, S.P.: ageR: Supervised Age
+Models. doi: 10.5281/zenodo.4636715, 2022.
 }
 \keyword{datasets}

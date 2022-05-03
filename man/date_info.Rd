@@ -3,14 +3,38 @@
 \docType{data}
 \name{date_info}
 \alias{date_info}
-\title{\code{date_info}}
+\title{Dating information}
 \format{
-An object of class \code{date_info} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 10179 rows and 13 columns.
+A data frame (\code{tibble} object) with
+10179\verb{ rows and 13} variables:
+\describe{
+\item{ID_ENTITY}{\code{Unsigned integer}: Unique identifier for the entity
+(as in the \code{entity} table)}
+\item{ID_DATE_INFO}{\code{Unsigned integer}: Unique identifier for each
+dating record}
+\item{date_type}{\code{Text}: }
+\item{depth}{\code{Double}: }
+\item{thickness}{\code{Double}: }
+\item{lab_num}{\code{Text}: }
+\item{age_c14}{\code{Integer}: }
+\item{age_calib}{\code{Integer}: }
+\item{error}{\code{Integer}: }
+\item{material_dated}{\code{Text}: }
+\item{age_used}{\code{Text}: }
+\item{reason_age_not_used}{\code{Text}: }
+\item{notes}{\code{Text}: }
+}
 }
 \usage{
 date_info
 }
 \description{
-\code{date_info}
+Contains dating information linked to each entity. These dates were used
+(or ignored, see the \code{notes} column) to create the age models. Represents
+the \code{date_info} table in the database.
+}
+\examples{
+date_info_tb <- special.epd::date_info
+head(date_info)
 }
 \keyword{datasets}

@@ -3,14 +3,36 @@
 \docType{data}
 \name{model_name}
 \alias{model_name}
-\title{\code{model_name}}
+\title{Age model names}
 \format{
-An object of class \code{model_name} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 18 rows and 2 columns.
+A data frame (\code{tibble} object) with
+18\verb{ rows and 2} variables:
+\describe{
+\item{ID_MODEL}{\code{Unsigned integer}: Unique identifier for the age
+model}
+\item{model_name}{\code{Text}: }
+}
 }
 \usage{
 model_name
 }
 \description{
-\code{model_name}
+Contains a list of valid age models. Represents the \code{model_name} table
+in the database.
+}
+\details{
+This table was populated from the RPD (Harrison et al., 2022); however, all
+the age models in the \code{special.epd} have \code{ID_MODEL = 8}, (IntCal20) models.
+}
+\examples{
+model_name_tb <- special.epd::model_name
+model_name_tb
+}
+\references{
+Harrison, S.P., Villegas-Diaz, R., Lincoln, P., Kesner, D.,
+Cruz-Silva, E., Sweeney, L., Shen, Y. and Gallagher, D.:
+The Reading Palaeofire Database v1b: an expanded global resource to document
+changes in fire regimes from sedimentary charcoal records. University of
+Reading. Dataset. doi: https://doi.org/10.17864/1947.000345, 2022.
 }
 \keyword{datasets}

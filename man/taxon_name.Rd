@@ -3,14 +3,25 @@
 \docType{data}
 \name{taxon_name}
 \alias{taxon_name}
-\title{\code{taxon_name}}
+\title{Taxon names}
 \format{
-An object of class \code{taxon_name} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 2940 rows and 2 columns.
+A data frame (\code{tibble} object) with
+2940\verb{ rows and 2} variables:
+\describe{
+\item{ID_TAXON}{\code{Unsigned integer}: Unique identifier for the taxon
+name}
+\item{taxon_name}{\code{Text}: }
+}
 }
 \usage{
 taxon_name
 }
 \description{
-\code{taxon_name}
+Contains a list of valid taxa. Represents the \code{taxon_name} table
+in the database.
+}
+\examples{
+taxon_name_tb <- special.epd::taxon_name
+head(taxon_name_tb)
 }
 \keyword{datasets}

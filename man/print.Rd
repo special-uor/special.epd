@@ -4,15 +4,15 @@
 \alias{print.snapshot}
 \title{Print Values}
 \usage{
-\method{print}{snapshot}(x, stats_only = TRUE, ...)
+\method{print}{snapshot}(x, ..., stats_only = TRUE)
 }
 \arguments{
 \item{x}{an object used to select a method.}
 
+\item{...}{further arguments passed to or from other methods.}
+
 \item{stats_only}{Boolean flag to indicate whether to show the summary
 only (default).}
-
-\item{...}{further arguments passed to or from other methods.}
 }
 \description{
 Print Values

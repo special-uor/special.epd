@@ -3,14 +3,34 @@
 \docType{data}
 \name{entity}
 \alias{entity}
-\title{\code{entity}}
+\title{Entity metadata}
 \format{
-An object of class \code{entity} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 1667 rows and 11 columns.
+A data frame (\code{tibble} object) with
+1667\verb{ rows and 11} variables:
+\describe{
+\item{ID_SITE}{\code{Unsigned integer}: Unique identifier for the site,
+multiple entities can be located within the same site}
+\item{ID_ENTITY}{\code{Unsigned integer}: Unique identifier for the entity}
+\item{site_name}{\code{Text}: }
+\item{entity_name}{\code{Text}: }
+\item{latitude}{\code{Double}: }
+\item{longitude}{\code{Double}: }
+\item{elevation}{\code{Double}: }
+\item{site_type}{\code{Text}: }
+\item{source}{\code{Text}: }
+\item{publication}{\code{Text}: }
+\item{doi}{\code{Text}: }
+}
 }
 \usage{
 entity
 }
 \description{
-\code{entity}
+Contains metadata linked to each entity. Represents the \code{entity} table in
+the database.
+}
+\examples{
+entity_tb <- special.epd::entity
+head(entity_tb)
 }
 \keyword{datasets}

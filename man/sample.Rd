@@ -3,13 +3,15 @@
 \docType{data}
 \name{sample}
 \alias{sample}
-\title{\code{sample} table}
+\title{Pollen samples}
 \format{
 A data frame (\code{tibble} object) with
-103091e)\verb{ rows and 11e)} variables:
+103091\verb{ rows and 11} variables:
 \describe{
-\item{ID_ENTITY}{\code{Unsigned integer}: Unique identifier for the entity (as in \code{entity} table)}
-\item{ID_SAMPLE}{\code{Unsigned integer}: Unique identifier for each sample}
+\item{ID_ENTITY}{\code{Unsigned integer}: Unique identifier for the entity
+(as in the \code{entity} table)}
+\item{ID_SAMPLE}{\code{Unsigned integer}: Unique identifier for each
+sample}
 \item{depth}{\code{Text}: Average sampling depth, in centimetres}
 \item{thickness}{\code{Text}: Sample thickness, in centimetres}
 \item{chronology_name}{\code{Text}: Name assigned to the chronology}
@@ -18,14 +20,18 @@ A data frame (\code{tibble} object) with
 \item{age_younger}{\code{Integer}: Lower bound for the sample's age}
 \item{age_older}{\code{Integer}: Upper bound for the sample's age}
 \item{count_type}{\code{Text}: Type of count for the sample}
-\item{sample_type}{\code{Text}: Sample type}
+\item{sample_type}{\code{Text}: Type of sample}
 }
-\code{sample}
 }
 \usage{
 sample
 }
 \description{
-Contains metadata for each sample record.
+Contains metadata for each pollen sample record in the database, \code{sample}
+table in the database.
+}
+\examples{
+sample_tb <- special.epd::sample
+head(sample_tb)
 }
 \keyword{datasets}

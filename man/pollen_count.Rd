@@ -3,14 +3,36 @@
 \docType{data}
 \name{pollen_count}
 \alias{pollen_count}
-\title{\code{pollen_count}}
+\title{Pollen counts}
 \format{
-An object of class \code{pollen_count} (inherits from \code{tbl_df}, \code{tbl}, \code{data.frame}) with 23046828 rows and 4 columns.
+A data frame (\code{tibble} object) with
+23046828\verb{ rows and 4} variables:
+\describe{
+\item{ID_ENTITY}{\code{Unsigned integer}: Unique identifier for the entity
+(as in the \code{entity} table)}
+\item{ID_SAMPLE}{\code{Unsigned integer}: Unique identifier for each
+sample}
+\item{depth}{\code{Text}: Average sampling depth, in centimetres}
+\item{thickness}{\code{Text}: Sample thickness, in centimetres}
+\item{chronology_name}{\code{Text}: Name assigned to the chronology}
+\item{age_type}{\code{Text}: Type of dating for the sample}
+\item{age}{\code{Integer}: Value dated for the sample}
+\item{age_younger}{\code{Integer}: Lower bound for the sample's age}
+\item{age_older}{\code{Integer}: Upper bound for the sample's age}
+\item{count_type}{\code{Text}: Type of count for the sample}
+\item{sample_type}{\code{Text}: Type of sample}
+}
 }
 \usage{
 pollen_count
 }
 \description{
-\code{pollen_count}
+Contains pollen counts for the samples, there are 3 levels of amalgamation,
+represented by an integer in the column \code{amalgamation_level}metadata for each pollen sample record in the database, \code{sample}
+table in the database.
+}
+\examples{
+sample_tb <- special.epd::sample
+head(sample_tb)
 }
 \keyword{datasets}
