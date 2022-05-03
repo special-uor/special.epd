@@ -532,6 +532,7 @@ snapshot.default <- function(x, ...) {
 }
 
 #' Write DB snapshot to disk
+#'
 #' Write DB snapshot to disk as individual CSV files.
 #'
 #' @param .data DB snapshot (object of `special.epd` class).

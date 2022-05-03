@@ -4,7 +4,7 @@
 #' @param ID_ENTITY Numeric vector with IDs linked to entities.
 #'
 #' @return Tibble with entities and external links.
-#' @export
+#' @keywords internal
 get_entity <- function(conn, ID_ENTITY) {
   conn %>%
     dabr::select("SELECT * FROM entity",
